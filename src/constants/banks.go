@@ -14,12 +14,16 @@
 
 package constants
 
-// Currency represents supported currencies.
+// Currency represents supported currencies for bank operations.
 type Currency string
 
+// Supported currency constants for GSPAY2 payment operations.
 const (
+	// CurrencyIDR represents Indonesian Rupiah.
 	CurrencyIDR Currency = "IDR"
+	// CurrencyMYR represents Malaysian Ringgit.
 	CurrencyMYR Currency = "MYR"
+	// CurrencyTHB represents Thai Baht.
 	CurrencyTHB Currency = "THB"
 )
 

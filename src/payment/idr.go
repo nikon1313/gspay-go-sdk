@@ -50,14 +50,20 @@ type idrAPIRequest struct {
 
 // IDRResponse represents the response from creating an IDR payment.
 type IDRResponse struct {
-	// PaymentURL is the URL to redirect the user for payment.
-	PaymentURL string `json:"payment_url"`
 	// IDRPaymentID is the unique payment ID assigned by GSPAY2.
 	IDRPaymentID string `json:"idrpayment_id"`
+	// TransactionID is the unique ID of the Transaction.
+	TransactionID string `json:"transaction_id"`
+	// Amount is the payment amount.
+	Amount string `json:"amount"`
 	// ExpireDate is the payment expiration date/time.
 	ExpireDate string `json:"expire_date"`
 	// Status is the initial payment status.
-	Status constants.PaymentStatus `json:"status"`
+	Status string `json:"status"`
+	// PaymentURL is the URL to redirect the user for payment.
+	PaymentURL string `json:"payment_url"`
+	// QR is the QR code string for payment.
+	QR string `json:"qr,omitempty"`
 }
 
 // IDRStatusResponse represents the response from querying IDR payment status.

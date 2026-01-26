@@ -36,7 +36,7 @@ func TestService_Get(t *testing.T) {
 			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
-				"data":    `{"balance":"100000.00"}`,
+				"data":    []map[string]float64{{"balance": 100000.00, "usdt_balance": 0.0}},
 			})
 		}))
 		defer server.Close()
@@ -47,7 +47,7 @@ func TestService_Get(t *testing.T) {
 		resp, err := svc.Get(context.Background())
 
 		require.NoError(t, err)
-		assert.Equal(t, "100000.00", resp.Balance)
+		assert.Equal(t, "100000.00", resp)
 	})
 
 	t.Run("handles API error", func(t *testing.T) {

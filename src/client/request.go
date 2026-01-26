@@ -210,6 +210,16 @@ func ParseData[T any](data json.RawMessage) (*T, error) {
 		return &arr[0], nil
 	}
 
+	// Try to unmarshal as array of strings
+	var strArr []string
+	if err := json.Unmarshal(data, &strArr); err == nil && len(strArr) > 0 {
+		// Try to unmarshal the first string as T if it's JSON
+		var result T
+		if err := json.Unmarshal([]byte(strArr[0]), &result); err == nil {
+			return &result, nil
+		}
+	}
+
 	// Try to unmarshal as single object
 	var result T
 	if err := json.Unmarshal(data, &result); err != nil {

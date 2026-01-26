@@ -24,8 +24,10 @@ import (
 
 // Response represents the response from querying operator balance.
 type Response struct {
-	// Balance is the operator's available settlement balance.
-	Balance string `json:"balance"`
+	// Balance is the operator's IDR balance.
+	Balance float64 `json:"balance"`
+	// UsdtBalance is the operator's USDT balance.
+	UsdtBalance float64 `json:"usdt_balance"`
 }
 
 // Service handles balance operations.
@@ -35,17 +37,17 @@ type Service struct{ client *client.Client }
 func NewService(c *client.Client) *Service { return &Service{client: c} }
 
 // Get queries the operator's available settlement balance.
-func (s *Service) Get(ctx context.Context) (*Response, error) {
+func (s *Service) Get(ctx context.Context) (string, error) {
 	endpoint := fmt.Sprintf("/v2/integrations/operator/%s/get/balance", s.client.AuthKey)
 	resp, err := s.client.Get(ctx, endpoint, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	result, err := client.ParseData[Response](resp.Data)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return result, nil
+	return fmt.Sprintf("%.2f", (*result).Balance), nil
 }

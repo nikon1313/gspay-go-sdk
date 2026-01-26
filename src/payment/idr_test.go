@@ -47,7 +47,7 @@ func TestIDRService_Create(t *testing.T) {
 			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
-				"data":    `{"payment_url":"https://pay.example.com","idrpayment_id":"PAY123","expire_date":"2026-01-26 15:00:00"}`,
+				"data":    `{"idrpayment_id":"PAY123","transaction_id":"TXN123456789","amount":"50000","expire_date":"2026-01-26 15:00:00","status":"0","payment_url":"https://pay.example.com"}`,
 			})
 		}))
 		defer server.Close()

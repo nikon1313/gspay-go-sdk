@@ -99,7 +99,7 @@ func main() {
 	if err != nil {
 		log.Printf("Error: %v", err)
 	} else {
-		fmt.Printf("Balance: %s\n", balanceResp.Balance)
+		fmt.Printf("Balance: %s\n", balanceResp)
 	}
 
 	fmt.Println()

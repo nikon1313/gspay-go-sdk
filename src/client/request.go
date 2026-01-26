@@ -26,6 +26,7 @@ import (
 
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/errors"
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/helper/gc"
 )
 
 // Response represents a generic API response structure.
@@ -45,15 +46,22 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 	fullURL := c.BaseURL + endpoint
 
 	var reqBody io.Reader
-	var jsonBytes []byte
+	var reqBuf gc.Buffer
 	if body != nil {
-		var err error
-		jsonBytes, err = json.Marshal(body)
-		if err != nil {
+		reqBuf = gc.Default.Get()
+		if err := json.NewEncoder(reqBuf).Encode(body); err != nil {
+			reqBuf.Reset()
+			gc.Default.Put(reqBuf)
 			return nil, fmt.Errorf("failed to marshal request body: %w", err)
 		}
-		reqBody = bytes.NewReader(jsonBytes)
+		reqBody = bytes.NewReader(reqBuf.Bytes())
 	}
+	defer func() {
+		if reqBuf != nil {
+			reqBuf.Reset()
+			gc.Default.Put(reqBuf)
+		}
+	}()
 
 	var lastErr error
 	for attempt := 0; attempt <= c.Retries; attempt++ {
@@ -71,7 +79,7 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 
 			// Reset body reader for retry
 			if body != nil {
-				reqBody = bytes.NewReader(jsonBytes)
+				reqBody = bytes.NewReader(reqBuf.Bytes())
 			}
 		}
 
@@ -96,10 +104,13 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 			return nil, fmt.Errorf("%w: %v", errors.ErrRequestFailed, err)
 		}
 
-		respBody, err := io.ReadAll(resp.Body)
+		respBuf := gc.Default.Get()
+		_, err = respBuf.ReadFrom(resp.Body)
 		resp.Body.Close()
 
 		if err != nil {
+			respBuf.Reset()
+			gc.Default.Put(respBuf)
 			lastErr = err
 			if attempt < c.Retries {
 				continue
@@ -113,8 +124,10 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 				Code:        resp.StatusCode,
 				Message:     fmt.Sprintf("HTTP Error: %d", resp.StatusCode),
 				Endpoint:    endpoint,
-				RawResponse: string(respBody),
+				RawResponse: string(respBuf.Bytes()),
 			}
+			respBuf.Reset()
+			gc.Default.Put(respBuf)
 			if (resp.StatusCode >= 500 || resp.StatusCode == 404) && attempt < c.Retries {
 				continue
 			}
@@ -122,7 +135,9 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 		}
 
 		// Handle empty response
-		if len(respBody) == 0 {
+		if respBuf.Len() == 0 {
+			respBuf.Reset()
+			gc.Default.Put(respBuf)
 			lastErr = errors.ErrEmptyResponse
 			if attempt < c.Retries {
 				continue
@@ -132,20 +147,28 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 
 		// Parse response
 		var apiResp Response
-		if err := json.Unmarshal(respBody, &apiResp); err != nil {
+		if err := json.Unmarshal(respBuf.Bytes(), &apiResp); err != nil {
+			respBuf.Reset()
+			gc.Default.Put(respBuf)
 			return nil, fmt.Errorf("%w: %v", errors.ErrInvalidJSON, err)
 		}
 
 		// Check for API-level errors
 		if !apiResp.IsSuccess() {
-			return nil, &errors.APIError{
+			err := &errors.APIError{
 				Code:        apiResp.Code,
 				Message:     apiResp.Message,
 				Endpoint:    endpoint,
-				RawResponse: string(respBody),
+				RawResponse: string(respBuf.Bytes()),
 			}
+			respBuf.Reset()
+			gc.Default.Put(respBuf)
+			return nil, err
 		}
 
+		// Success, return response and clean up buffer
+		respBuf.Reset()
+		gc.Default.Put(respBuf)
 		return &apiResp, nil
 	}
 

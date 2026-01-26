@@ -66,7 +66,7 @@ func main() {
     // Create an IDR payment
     resp, err := paymentSvc.Create(ctx, &payment.IDRRequest{
         TransactionID:  client.GenerateTransactionID("TXN"),
-        PlayerUsername: "user123",
+        Username:       "user123",
         Amount:         50000, // 50,000 IDR
         Channel:        constants.ChannelQRIS,
     })
@@ -118,12 +118,12 @@ import (
 c := client.New("auth-key", "secret-key")
 paymentSvc := payment.NewIDRService(c)
 
-resp, err := paymentSvc.Create(ctx, &payment.IDRRequest{
-    TransactionID:  client.GenerateTransactionID("TXN"),
-    PlayerUsername: "user123",
-    Amount:         50000,
-    Channel:        constants.ChannelQRIS, // Optional: QRIS, DANA, or BNI
-})
+    resp, err := paymentSvc.Create(ctx, &payment.IDRRequest{
+        TransactionID:  client.GenerateTransactionID("TXN"),
+        Username:       "user123",
+        Amount:         50000,
+        Channel:        constants.ChannelQRIS, // Optional: QRIS, DANA, or BNI
+    })
 if err != nil {
     log.Fatal(err)
 }
@@ -160,15 +160,15 @@ import (
 c := client.New("auth-key", "secret-key")
 payoutSvc := payout.NewIDRService(c)
 
-resp, err := payoutSvc.Create(ctx, &payout.IDRRequest{
-    TransactionID:  client.GenerateTransactionID("PAY"),
-    PlayerUsername: "user123",
-    AccountName:    "John Doe",
-    AccountNumber:  "1234567890",
-    Amount:         50000,
-    BankCode:       "BCA",
-    Description:    "Withdrawal request",
-})
+    resp, err := payoutSvc.Create(ctx, &payout.IDRRequest{
+        TransactionID:  client.GenerateTransactionID("PAY"),
+        Username:       "user123",
+        AccountName:    "John Doe",
+        AccountNumber:  "1234567890",
+        Amount:         50000,
+        BankCode:       "BCA",
+        Description:    "Withdrawal request",
+    })
 if err != nil {
     log.Fatal(err)
 }
@@ -187,11 +187,11 @@ import (
 c := client.New("auth-key", "secret-key")
 usdtSvc := payment.NewUSDTService(c)
 
-resp, err := usdtSvc.Create(ctx, &payment.USDTRequest{
-    TransactionID:  client.GenerateTransactionID("USD"),
-    PlayerUsername: "user123",
-    Amount:         10.50, // 10.50 USDT
-})
+    resp, err := usdtSvc.Create(ctx, &payment.USDTRequest{
+        TransactionID:  client.GenerateTransactionID("USD"),
+        Username:       "user123",
+        Amount:         10.50, // 10.50 USDT
+    })
 if err != nil {
     log.Fatal(err)
 }

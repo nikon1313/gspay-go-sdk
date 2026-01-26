@@ -23,7 +23,7 @@ import (
 func TestUserAgent(t *testing.T) {
 	t.Run("returns formatted user agent string", func(t *testing.T) {
 		ua := UserAgent()
-		expected := "gspay-go-sdk/1.0.0 (+https://github.com/H0llyW00dzZ/gspay-go-sdk)"
+		expected := SDKName + "/" + SDKVersion + " (+" + SDKRepository + ")"
 		assert.Equal(t, expected, ua)
 	})
 

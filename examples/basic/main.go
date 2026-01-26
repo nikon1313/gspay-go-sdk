@@ -72,6 +72,9 @@ func main() {
 		fmt.Printf("Payment ID: %s\n", paymentResp.IDRPaymentID)
 		fmt.Printf("Expires: %s\n", paymentResp.ExpireDate)
 		fmt.Printf("Amount: %s\n", client.FormatAmountIDR(50000))
+		if paymentResp.QR != "" {
+			fmt.Printf("QR Code Data: %s\n", paymentResp.QR)
+		}
 	}
 
 	fmt.Println()

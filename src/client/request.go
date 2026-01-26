@@ -42,7 +42,7 @@ func (r *Response) IsSuccess() bool {
 }
 
 // DoRequest performs an HTTP request with retry logic.
-func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body interface{}) (*Response, error) {
+func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body any) (*Response, error) {
 	fullURL := c.BaseURL + endpoint
 
 	var reqBody io.Reader
@@ -67,10 +67,7 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 	for attempt := 0; attempt <= c.Retries; attempt++ {
 		if attempt > 0 {
 			// Exponential backoff
-			waitTime := c.RetryWaitMin * time.Duration(attempt)
-			if waitTime > c.RetryWaitMax {
-				waitTime = c.RetryWaitMax
-			}
+			waitTime := min(c.RetryWaitMin*time.Duration(attempt), c.RetryWaitMax)
 			select {
 			case <-ctx.Done():
 				return nil, ctx.Err()
@@ -179,7 +176,7 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 }
 
 // Post performs a POST request.
-func (c *Client) Post(ctx context.Context, endpoint string, body interface{}) (*Response, error) {
+func (c *Client) Post(ctx context.Context, endpoint string, body any) (*Response, error) {
 	return c.DoRequest(ctx, http.MethodPost, endpoint, body)
 }
 

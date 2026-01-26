@@ -116,7 +116,7 @@ func TestGenerateTransactionID(t *testing.T) {
 
 	t.Run("generates valid format IDs", func(t *testing.T) {
 		// Generate multiple IDs and verify format
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			id := GenerateTransactionID("TXN")
 			assert.True(t, len(id) >= 17 && len(id) <= 20, "ID length should be 17-20, got %d", len(id))
 			assert.Regexp(t, `^TXN\d{14,17}$`, id)

@@ -44,7 +44,7 @@ func TestIDRService_Create(t *testing.T) {
 			assert.NotEmpty(t, req.Signature)
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
 				"data":    `{"payment_url":"https://pay.example.com","idrpayment_id":"PAY123","expire_date":"2026-01-26 15:00:00"}`,
@@ -113,7 +113,7 @@ func TestIDRService_GetStatus(t *testing.T) {
 			assert.Equal(t, "TXN123456789", r.URL.Query().Get("transaction_id"))
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
 				"data":    `{"idrpayment_id":"PAY123","status":1,"amount":"50000.00"}`,

@@ -43,7 +43,7 @@ func TestUSDTService_Create(t *testing.T) {
 			assert.NotEmpty(t, req.Signature)
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
 				"data":    `{"payment_url":"https://pay.example.com/usdt","cryptopayment_id":"CRYPTO123","expire_date":"2026-01-26 15:02:00"}`,

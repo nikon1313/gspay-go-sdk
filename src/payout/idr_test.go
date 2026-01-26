@@ -46,7 +46,7 @@ func TestIDRService_Create(t *testing.T) {
 			assert.NotEmpty(t, req.Signature)
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
 				"data":    `{"idrpayout_id":"PAYOUT123","status":0}`,
@@ -114,7 +114,7 @@ func TestIDRService_Create(t *testing.T) {
 			assert.Equal(t, "BCA", req.BankTarget) // Should be uppercase
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
 				"data":    `{"idrpayout_id":"PAYOUT123","status":0}`,
@@ -145,7 +145,7 @@ func TestIDRService_GetStatus(t *testing.T) {
 			assert.Equal(t, "TXN123456789", r.URL.Query().Get("transaction_id"))
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
 				"data":    `{"idrpayout_id":"PAYOUT123","status":1,"completed":true,"payout_success":true}`,

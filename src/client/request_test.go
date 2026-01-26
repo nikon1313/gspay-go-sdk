@@ -37,7 +37,7 @@ func TestDoRequest(t *testing.T) {
 			assert.Equal(t, constants.UserAgent(), r.Header.Get("User-Agent"))
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
 				"data":    `{"payment_url":"https://pay.example.com"}`,
@@ -59,7 +59,7 @@ func TestDoRequest(t *testing.T) {
 			assert.Equal(t, "value", r.URL.Query().Get("key"))
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
 			})
@@ -76,7 +76,7 @@ func TestDoRequest(t *testing.T) {
 	t.Run("handles API error response", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    400,
 				"message": "invalid request",
 			})
@@ -161,7 +161,7 @@ func TestDoRequest(t *testing.T) {
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
 			})

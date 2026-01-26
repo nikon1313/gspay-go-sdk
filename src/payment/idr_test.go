@@ -38,7 +38,7 @@ func TestIDRService_Create(t *testing.T) {
 			var req idrAPIRequest
 			json.NewDecoder(r.Body).Decode(&req)
 			assert.Equal(t, "TXN123456789", req.TransactionID)
-			assert.Equal(t, "user123", req.PlayerUsername)
+			assert.Equal(t, "user123", req.Username)
 			assert.Equal(t, int64(50000), req.Amount)
 			assert.Equal(t, "QRIS", req.Channel)
 			assert.NotEmpty(t, req.Signature)
@@ -56,10 +56,10 @@ func TestIDRService_Create(t *testing.T) {
 		svc := NewIDRService(c)
 
 		resp, err := svc.Create(context.Background(), &IDRRequest{
-			TransactionID:  "TXN123456789",
-			PlayerUsername: "user123",
-			Amount:         50000,
-			Channel:        constants.ChannelQRIS,
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			Amount:        50000,
+			Channel:       constants.ChannelQRIS,
 		})
 
 		require.NoError(t, err)
@@ -74,17 +74,17 @@ func TestIDRService_Create(t *testing.T) {
 
 		// Too short
 		_, err := svc.Create(context.Background(), &IDRRequest{
-			TransactionID:  "TXN",
-			PlayerUsername: "user123",
-			Amount:         50000,
+			TransactionID: "TXN",
+			Username:      "user123",
+			Amount:        50000,
 		})
 		assert.ErrorIs(t, err, errors.ErrInvalidTransactionID)
 
 		// Too long
 		_, err = svc.Create(context.Background(), &IDRRequest{
-			TransactionID:  "TXN12345678901234567890",
-			PlayerUsername: "user123",
-			Amount:         50000,
+			TransactionID: "TXN12345678901234567890",
+			Username:      "user123",
+			Amount:        50000,
 		})
 		assert.ErrorIs(t, err, errors.ErrInvalidTransactionID)
 	})
@@ -94,9 +94,9 @@ func TestIDRService_Create(t *testing.T) {
 		svc := NewIDRService(c)
 
 		_, err := svc.Create(context.Background(), &IDRRequest{
-			TransactionID:  "TXN123456789",
-			PlayerUsername: "user123",
-			Amount:         5000, // Less than 10000
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			Amount:        5000, // Less than 10000
 		})
 
 		require.Error(t, err)

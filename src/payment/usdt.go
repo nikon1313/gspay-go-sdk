@@ -29,18 +29,18 @@ import (
 type USDTRequest struct {
 	// TransactionID is a unique transaction ID.
 	TransactionID string `json:"transaction_id"`
-	// PlayerUsername is the customer ID or username.
-	PlayerUsername string `json:"player_username"`
+	// Username is the customer ID or username.
+	Username string `json:"player_username"`
 	// Amount is the payment amount in USDT (2 decimal places).
 	Amount float64 `json:"amount"`
 }
 
 // usdtAPIRequest is the internal API request structure.
 type usdtAPIRequest struct {
-	TransactionID  string `json:"transaction_id"`
-	PlayerUsername string `json:"player_username"`
-	Amount         string `json:"amount"`
-	Signature      string `json:"signature"`
+	TransactionID string `json:"transaction_id"`
+	Username      string `json:"player_username"`
+	Amount        string `json:"amount"`
+	Signature     string `json:"signature"`
 }
 
 // USDTResponse represents the response from creating a USDT payment.
@@ -94,7 +94,7 @@ func (s *USDTService) Create(ctx context.Context, req *USDTRequest) (*USDTRespon
 	// Generate signature: transaction_id + player_username + amount + secret_key
 	signatureData := fmt.Sprintf("%s%s%s%s",
 		req.TransactionID,
-		req.PlayerUsername,
+		req.Username,
 		formattedAmount,
 		s.client.SecretKey,
 	)
@@ -102,10 +102,10 @@ func (s *USDTService) Create(ctx context.Context, req *USDTRequest) (*USDTRespon
 
 	// Build API request
 	apiReq := usdtAPIRequest{
-		TransactionID:  req.TransactionID,
-		PlayerUsername: req.PlayerUsername,
-		Amount:         formattedAmount,
-		Signature:      sig,
+		TransactionID: req.TransactionID,
+		Username:      req.Username,
+		Amount:        formattedAmount,
+		Signature:     sig,
 	}
 
 	endpoint := fmt.Sprintf("/v2/integrations/operators/%s/cryptocurrency/trc20/usdt", s.client.AuthKey)

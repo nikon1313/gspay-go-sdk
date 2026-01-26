@@ -38,7 +38,7 @@ func TestIDRService_Create(t *testing.T) {
 			var req idrAPIRequest
 			json.NewDecoder(r.Body).Decode(&req)
 			assert.Equal(t, "TXN123456789", req.TransactionID)
-			assert.Equal(t, "user123", req.PlayerUsername)
+			assert.Equal(t, "user123", req.Username)
 			assert.Equal(t, "John Doe", req.AccountName)
 			assert.Equal(t, "1234567890", req.AccountNumber)
 			assert.Equal(t, int64(50000), req.Amount)
@@ -58,12 +58,12 @@ func TestIDRService_Create(t *testing.T) {
 		svc := NewIDRService(c)
 
 		resp, err := svc.Create(context.Background(), &IDRRequest{
-			TransactionID:  "TXN123456789",
-			PlayerUsername: "user123",
-			AccountName:    "John Doe",
-			AccountNumber:  "1234567890",
-			Amount:         50000,
-			BankCode:       "BCA",
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			AccountName:   "John Doe",
+			AccountNumber: "1234567890",
+			Amount:        50000,
+			BankCode:      "BCA",
 		})
 
 		require.NoError(t, err)
@@ -76,12 +76,12 @@ func TestIDRService_Create(t *testing.T) {
 		svc := NewIDRService(c)
 
 		_, err := svc.Create(context.Background(), &IDRRequest{
-			TransactionID:  "TXN123456789",
-			PlayerUsername: "user123",
-			AccountName:    "John Doe",
-			AccountNumber:  "1234567890",
-			Amount:         50000,
-			BankCode:       "INVALID",
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			AccountName:   "John Doe",
+			AccountNumber: "1234567890",
+			Amount:        50000,
+			BankCode:      "INVALID",
 		})
 
 		require.Error(t, err)
@@ -93,12 +93,12 @@ func TestIDRService_Create(t *testing.T) {
 		svc := NewIDRService(c)
 
 		_, err := svc.Create(context.Background(), &IDRRequest{
-			TransactionID:  "TXN123456789",
-			PlayerUsername: "user123",
-			AccountName:    "John Doe",
-			AccountNumber:  "1234567890",
-			Amount:         5000, // Less than 10000
-			BankCode:       "BCA",
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			AccountName:   "John Doe",
+			AccountNumber: "1234567890",
+			Amount:        5000, // Less than 10000
+			BankCode:      "BCA",
 		})
 
 		require.Error(t, err)
@@ -126,12 +126,12 @@ func TestIDRService_Create(t *testing.T) {
 		svc := NewIDRService(c)
 
 		_, err := svc.Create(context.Background(), &IDRRequest{
-			TransactionID:  "TXN123456789",
-			PlayerUsername: "user123",
-			AccountName:    "John Doe",
-			AccountNumber:  "1234567890",
-			Amount:         50000,
-			BankCode:       "bca", // lowercase
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			AccountName:   "John Doe",
+			AccountNumber: "1234567890",
+			Amount:        50000,
+			BankCode:      "bca", // lowercase
 		})
 
 		require.NoError(t, err)

@@ -38,7 +38,7 @@ func TestUSDTService_Create(t *testing.T) {
 			var req usdtAPIRequest
 			json.NewDecoder(r.Body).Decode(&req)
 			assert.Equal(t, "TXN123456789", req.TransactionID)
-			assert.Equal(t, "user123", req.PlayerUsername)
+			assert.Equal(t, "user123", req.Username)
 			assert.Equal(t, "10.50", req.Amount)
 			assert.NotEmpty(t, req.Signature)
 
@@ -55,9 +55,9 @@ func TestUSDTService_Create(t *testing.T) {
 		svc := NewUSDTService(c)
 
 		resp, err := svc.Create(context.Background(), &USDTRequest{
-			TransactionID:  "TXN123456789",
-			PlayerUsername: "user123",
-			Amount:         10.50,
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			Amount:        10.50,
 		})
 
 		require.NoError(t, err)
@@ -71,9 +71,9 @@ func TestUSDTService_Create(t *testing.T) {
 		svc := NewUSDTService(c)
 
 		_, err := svc.Create(context.Background(), &USDTRequest{
-			TransactionID:  "TXN123456789",
-			PlayerUsername: "user123",
-			Amount:         0.50, // Less than 1.00
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			Amount:        0.50, // Less than 1.00
 		})
 
 		require.Error(t, err)

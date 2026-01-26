@@ -30,8 +30,8 @@ import (
 type IDRRequest struct {
 	// TransactionID is a unique transaction ID (5-20 characters).
 	TransactionID string `json:"transaction_id"`
-	// PlayerUsername is the customer ID or username.
-	PlayerUsername string `json:"player_username"`
+	// Username is the customer ID or username.
+	Username string `json:"player_username"`
 	// Amount is the payment amount in IDR (no decimals, e.g., 10000).
 	Amount int64 `json:"amount"`
 	// Channel is an optional payment channel (QRIS, DANA, BNI).
@@ -41,11 +41,11 @@ type IDRRequest struct {
 
 // idrAPIRequest is the internal API request structure.
 type idrAPIRequest struct {
-	TransactionID  string `json:"transaction_id"`
-	PlayerUsername string `json:"player_username"`
-	Amount         int64  `json:"amount"`
-	Signature      string `json:"signature"`
-	Channel        string `json:"channel,omitempty"`
+	TransactionID string `json:"transaction_id"`
+	Username      string `json:"player_username"`
+	Amount        int64  `json:"amount"`
+	Signature     string `json:"signature"`
+	Channel       string `json:"channel,omitempty"`
 }
 
 // IDRResponse represents the response from creating an IDR payment.
@@ -118,7 +118,7 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 	// Generate signature: transaction_id + player_username + amount + secret_key
 	signatureData := fmt.Sprintf("%s%s%d%s",
 		req.TransactionID,
-		req.PlayerUsername,
+		req.Username,
 		req.Amount,
 		s.client.SecretKey,
 	)
@@ -126,10 +126,10 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 
 	// Build API request
 	apiReq := idrAPIRequest{
-		TransactionID:  req.TransactionID,
-		PlayerUsername: req.PlayerUsername,
-		Amount:         req.Amount,
-		Signature:      sig,
+		TransactionID: req.TransactionID,
+		Username:      req.Username,
+		Amount:        req.Amount,
+		Signature:     sig,
 	}
 
 	// Add channel if specified

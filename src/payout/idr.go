@@ -31,8 +31,8 @@ import (
 type IDRRequest struct {
 	// TransactionID is a unique transaction ID.
 	TransactionID string `json:"transaction_id"`
-	// PlayerUsername is the customer ID or username.
-	PlayerUsername string `json:"player_username"`
+	// Username is the customer ID or username.
+	Username string `json:"player_username"`
 	// AccountName is the recipient's bank account name.
 	AccountName string `json:"account_name"`
 	// AccountNumber is the recipient's bank account number.
@@ -47,14 +47,14 @@ type IDRRequest struct {
 
 // idrAPIRequest is the internal API request structure.
 type idrAPIRequest struct {
-	TransactionID  string `json:"transaction_id"`
-	PlayerUsername string `json:"player_username"`
-	AccountName    string `json:"account_name"`
-	AccountNumber  string `json:"account_number"`
-	Amount         int64  `json:"amount"`
-	BankTarget     string `json:"bank_target"`
-	Signature      string `json:"signature"`
-	Description    string `json:"trx_description,omitempty"`
+	TransactionID string `json:"transaction_id"`
+	Username      string `json:"player_username"`
+	AccountName   string `json:"account_name"`
+	AccountNumber string `json:"account_number"`
+	Amount        int64  `json:"amount"`
+	BankTarget    string `json:"bank_target"`
+	Signature     string `json:"signature"`
+	Description   string `json:"trx_description,omitempty"`
 }
 
 // IDRResponse represents the response from creating an IDR payout.
@@ -123,7 +123,7 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 	// Generate signature: transaction_id + player_username + amount + account_number + secret_key
 	signatureData := fmt.Sprintf("%s%s%d%s%s",
 		req.TransactionID,
-		req.PlayerUsername,
+		req.Username,
 		req.Amount,
 		req.AccountNumber,
 		s.client.SecretKey,
@@ -132,13 +132,13 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 
 	// Build API request
 	apiReq := idrAPIRequest{
-		TransactionID:  req.TransactionID,
-		PlayerUsername: req.PlayerUsername,
-		AccountName:    req.AccountName,
-		AccountNumber:  req.AccountNumber,
-		Amount:         req.Amount,
-		BankTarget:     bankCode,
-		Signature:      sig,
+		TransactionID: req.TransactionID,
+		Username:      req.Username,
+		AccountName:   req.AccountName,
+		AccountNumber: req.AccountNumber,
+		Amount:        req.Amount,
+		BankTarget:    bankCode,
+		Signature:     sig,
 	}
 
 	if req.Description != "" {

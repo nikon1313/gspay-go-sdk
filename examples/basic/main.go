@@ -56,10 +56,10 @@ func main() {
 	// Example 1: Create IDR Payment
 	fmt.Println("=== Creating IDR Payment ===")
 	paymentResp, err := paymentSvc.Create(ctx, &payment.IDRRequest{
-		TransactionID:  client.GenerateTransactionID("TXN"),
-		PlayerUsername: "demo_user",
-		Amount:         50000,
-		Channel:        constants.ChannelQRIS,
+		TransactionID: client.GenerateTransactionID("TXN"),
+		Username:      "demo_user",
+		Amount:        50000,
+		Channel:       constants.ChannelQRIS,
 	})
 	if err != nil {
 		if apiErr := errors.GetAPIError(err); apiErr != nil {
@@ -79,9 +79,9 @@ func main() {
 	// Example 2: Create USDT Payment
 	fmt.Println("=== Creating USDT Payment ===")
 	usdtResp, err := usdtSvc.Create(ctx, &payment.USDTRequest{
-		TransactionID:  client.GenerateTransactionID("USD"),
-		PlayerUsername: "demo_user",
-		Amount:         10.50,
+		TransactionID: client.GenerateTransactionID("USD"),
+		Username:      "demo_user",
+		Amount:        10.50,
 	})
 	if err != nil {
 		log.Printf("Error: %v", err)

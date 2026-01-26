@@ -1,0 +1,63 @@
+// Copyright 2026 H0llyW00dzZ
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package constants
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestUserAgent(t *testing.T) {
+	t.Run("returns formatted user agent string", func(t *testing.T) {
+		ua := UserAgent()
+		expected := "gspay-go-sdk/1.0.0 (+https://github.com/H0llyW00dzZ/gspay-go-sdk)"
+		assert.Equal(t, expected, ua)
+	})
+
+	t.Run("contains SDK name", func(t *testing.T) {
+		ua := UserAgent()
+		assert.Contains(t, ua, SDKName)
+	})
+
+	t.Run("contains SDK version", func(t *testing.T) {
+		ua := UserAgent()
+		assert.Contains(t, ua, SDKVersion)
+	})
+
+	t.Run("contains repository URL", func(t *testing.T) {
+		ua := UserAgent()
+		assert.Contains(t, ua, SDKRepository)
+	})
+}
+
+func TestVersionConstants(t *testing.T) {
+	t.Run("SDK name is not empty", func(t *testing.T) {
+		assert.NotEmpty(t, SDKName)
+	})
+
+	t.Run("SDK version is not empty", func(t *testing.T) {
+		assert.NotEmpty(t, SDKVersion)
+	})
+
+	t.Run("SDK version follows semver format", func(t *testing.T) {
+		// Basic semver check: should contain at least one dot
+		assert.Contains(t, SDKVersion, ".")
+	})
+
+	t.Run("SDK repository is valid URL", func(t *testing.T) {
+		assert.Contains(t, SDKRepository, "https://github.com/")
+	})
+}

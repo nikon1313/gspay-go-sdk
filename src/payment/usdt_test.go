@@ -1,0 +1,170 @@
+// Copyright 2026 H0llyW00dzZ
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package payment
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/client"
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/errors"
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/internal/signature"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestUSDTService_Create(t *testing.T) {
+	t.Run("creates USDT payment successfully", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, http.MethodPost, r.Method)
+			assert.Contains(t, r.URL.Path, "/cryptocurrency/trc20/usdt")
+
+			var req usdtAPIRequest
+			json.NewDecoder(r.Body).Decode(&req)
+			assert.Equal(t, "TXN123456789", req.TransactionID)
+			assert.Equal(t, "user123", req.PlayerUsername)
+			assert.Equal(t, "10.50", req.Amount)
+			assert.NotEmpty(t, req.Signature)
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"code":    200,
+				"message": "success",
+				"data":    `{"payment_url":"https://pay.example.com/usdt","cryptopayment_id":"CRYPTO123","expire_date":"2026-01-26 15:02:00"}`,
+			})
+		}))
+		defer server.Close()
+
+		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
+		svc := NewUSDTService(c)
+
+		resp, err := svc.Create(context.Background(), &USDTRequest{
+			TransactionID:  "TXN123456789",
+			PlayerUsername: "user123",
+			Amount:         10.50,
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, "https://pay.example.com/usdt", resp.PaymentURL)
+		assert.Equal(t, "CRYPTO123", resp.CryptoPaymentID)
+	})
+
+	t.Run("validates minimum amount", func(t *testing.T) {
+		c := client.New("auth-key", "secret-key")
+		svc := NewUSDTService(c)
+
+		_, err := svc.Create(context.Background(), &USDTRequest{
+			TransactionID:  "TXN123456789",
+			PlayerUsername: "user123",
+			Amount:         0.50, // Less than 1.00
+		})
+
+		require.Error(t, err)
+		valErr := errors.GetValidationError(err)
+		require.NotNil(t, valErr)
+		assert.Equal(t, "amount", valErr.Field)
+	})
+}
+
+func TestUSDTService_VerifyCallback(t *testing.T) {
+	c := client.New("auth-key", "test-secret-key")
+	svc := NewUSDTService(c)
+
+	t.Run("verifies valid callback signature", func(t *testing.T) {
+		// Generate valid signature: cryptopayment_id + amount + transaction_id + status + secret_key
+		signatureData := "CRYPTO12310.50TXN1234567891test-secret-key"
+		validSignature := signature.Generate(signatureData)
+
+		callback := &USDTCallback{
+			CryptoPaymentID: "CRYPTO123",
+			Amount:          "10.50",
+			TransactionID:   "TXN123456789",
+			Status:          constants.StatusSuccess,
+			Signature:       validSignature,
+		}
+
+		err := svc.VerifyCallback(callback)
+		assert.NoError(t, err)
+	})
+
+	t.Run("rejects invalid signature", func(t *testing.T) {
+		callback := &USDTCallback{
+			CryptoPaymentID: "CRYPTO123",
+			Amount:          "10.50",
+			TransactionID:   "TXN123456789",
+			Status:          constants.StatusSuccess,
+			Signature:       "invalid-signature",
+		}
+
+		err := svc.VerifyCallback(callback)
+		assert.ErrorIs(t, err, errors.ErrInvalidSignature)
+	})
+
+	t.Run("rejects missing required fields", func(t *testing.T) {
+		testCases := []struct {
+			name     string
+			callback *USDTCallback
+		}{
+			{
+				name: "missing cryptopayment_id",
+				callback: &USDTCallback{
+					Amount:        "10.50",
+					TransactionID: "TXN123456789",
+					Status:        1,
+					Signature:     "sig",
+				},
+			},
+			{
+				name: "missing amount",
+				callback: &USDTCallback{
+					CryptoPaymentID: "CRYPTO123",
+					TransactionID:   "TXN123456789",
+					Status:          1,
+					Signature:       "sig",
+				},
+			},
+			{
+				name: "missing transaction_id",
+				callback: &USDTCallback{
+					CryptoPaymentID: "CRYPTO123",
+					Amount:          "10.50",
+					Status:          1,
+					Signature:       "sig",
+				},
+			},
+			{
+				name: "missing signature",
+				callback: &USDTCallback{
+					CryptoPaymentID: "CRYPTO123",
+					Amount:          "10.50",
+					TransactionID:   "TXN123456789",
+					Status:          1,
+				},
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				err := svc.VerifyCallback(tc.callback)
+				assert.ErrorIs(t, err, errors.ErrMissingCallbackField)
+			})
+		}
+	})
+}

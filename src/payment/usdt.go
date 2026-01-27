@@ -22,7 +22,6 @@ import (
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/client"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/errors"
-	"github.com/H0llyW00dzZ/gspay-go-sdk/src/internal/signature"
 )
 
 // USDTRequest represents a request to create a USDT payment.
@@ -96,7 +95,7 @@ func (s *USDTService) Create(ctx context.Context, req *USDTRequest) (*USDTRespon
 		formattedAmount,
 		s.client.SecretKey,
 	)
-	sig := signature.Generate(signatureData)
+	sig := s.client.GenerateSignature(signatureData)
 
 	// Build API request
 	apiReq := usdtAPIRequest{
@@ -179,10 +178,10 @@ func (s *USDTService) verifyCallbackSignature(callback *USDTCallback) error {
 		callback.Status,
 		s.client.SecretKey,
 	)
-	expectedSignature := signature.Generate(signatureData)
+	expectedSignature := s.client.GenerateSignature(signatureData)
 
 	// Constant-time comparison to prevent timing attacks
-	if !signature.Verify(expectedSignature, callback.Signature) {
+	if !s.client.VerifySignature(expectedSignature, callback.Signature) {
 		return errors.ErrInvalidSignature
 	}
 

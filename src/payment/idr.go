@@ -24,7 +24,6 @@ import (
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/client"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/errors"
-	"github.com/H0llyW00dzZ/gspay-go-sdk/src/internal/signature"
 )
 
 // IDRRequest represents a request to create an IDR payment.
@@ -145,7 +144,7 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 		req.Amount,
 		s.client.SecretKey,
 	)
-	sig := signature.Generate(signatureData)
+	sig := s.client.GenerateSignature(signatureData)
 
 	// Build API request
 	apiReq := idrAPIRequest{
@@ -228,10 +227,10 @@ func (s *IDRService) VerifySignature(id, amount, transactionID string, status co
 		int(status),
 		s.client.SecretKey,
 	)
-	expectedSignature := signature.Generate(signatureData)
+	expectedSignature := s.client.GenerateSignature(signatureData)
 
 	// Constant-time comparison to prevent timing attacks
-	if !signature.Verify(expectedSignature, receivedSignature) {
+	if !s.client.VerifySignature(expectedSignature, receivedSignature) {
 		return errors.ErrInvalidSignature
 	}
 

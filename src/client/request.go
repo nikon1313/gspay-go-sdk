@@ -78,7 +78,7 @@ func (c *Client) createHTTPRequest(ctx context.Context, method, fullURL string, 
 }
 
 // processResponse processes the HTTP response and returns parsed data or error.
-func (c *Client) processResponse(resp *http.Response, endpoint string) (*Response, error, bool) {
+func (c *Client) processResponse(resp *http.Response, endpoint string) (*Response, bool, error) {
 	respBuf := gc.Default.Get()
 	_, err := respBuf.ReadFrom(resp.Body)
 	resp.Body.Close()
@@ -86,7 +86,7 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 	if err != nil {
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, fmt.Errorf("failed to read response body: %w", err), true
+		return nil, true, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	// Handle HTTP errors - retry on server errors (5xx) or 404
@@ -100,14 +100,14 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
 		retry := (resp.StatusCode >= 500 || resp.StatusCode == 404)
-		return nil, apiErr, retry
+		return nil, retry, apiErr
 	}
 
 	// Handle empty response
 	if respBuf.Len() == 0 {
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, errors.ErrEmptyResponse, true
+		return nil, true, errors.ErrEmptyResponse
 	}
 
 	// Parse response
@@ -115,7 +115,7 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 	if err := json.Unmarshal(respBuf.Bytes(), &apiResp); err != nil {
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, fmt.Errorf("%w: %v", errors.ErrInvalidJSON, err), false
+		return nil, false, fmt.Errorf("%w: %v", errors.ErrInvalidJSON, err)
 	}
 
 	// Debug logging
@@ -133,14 +133,14 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 		}
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, apiErr, false
+		return nil, false, apiErr
 	}
 
 	// Clean up buffer
 	respBuf.Reset()
 	gc.Default.Put(respBuf)
 
-	return &apiResp, nil, false
+	return &apiResp, false, nil
 }
 
 // executeWithRetry executes the HTTP request with retry logic.
@@ -177,7 +177,7 @@ func (c *Client) executeWithRetry(ctx context.Context, method, fullURL string, r
 			break
 		}
 
-		apiResp, err, retry := c.processResponse(resp, endpoint)
+		apiResp, retry, err := c.processResponse(resp, endpoint)
 		if err != nil {
 			lastErr = err
 			if retry && attempt < c.Retries {

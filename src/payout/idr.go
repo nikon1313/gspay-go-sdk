@@ -91,15 +91,36 @@ type IDRStatusResponse struct {
 }
 
 // IDRCallback represents the callback data received from GSPAY2 for IDR payouts.
+//
+// According to GSPAY2 documentation, the callback contains:
+//   - idrpayout_id: Unique payout ID (bigint)
+//   - transaction_id: Unique transaction ID submitted
+//   - account_name: Bank account name submitted
+//   - account_number: Bank account number submitted
+//   - amount: Amount submitted (decimal, 2 decimal places)
+//   - completed: Payout completion stage (boolean)
+//   - payout_success: Success status (boolean)
+//   - remark: Bank transaction reference/status or error message
+//   - signature: MD5 hash verification
+//
+// Signature formula: idrpayout_id + account_number + amount + transaction_id + operator_secret_key
 type IDRCallback struct {
-	// IDRPayoutID is the unique payout ID.
+	// IDRPayoutID is the unique payout ID (bigint from GSPAY2).
 	IDRPayoutID json.Number `json:"idrpayout_id"`
-	// AccountNumber is the recipient's account number.
-	AccountNumber string `json:"account_number"`
-	// Amount is the payout amount (with 2 decimal places, e.g., "10000.00").
-	Amount string `json:"amount"`
 	// TransactionID is the original transaction ID.
 	TransactionID string `json:"transaction_id"`
+	// AccountName is the bank account name submitted.
+	AccountName string `json:"account_name"`
+	// AccountNumber is the recipient's account number.
+	AccountNumber string `json:"account_number"`
+	// Amount is the payout amount (decimal from GSPAY2).
+	Amount json.Number `json:"amount"`
+	// Completed indicates the payout completion stage.
+	Completed bool `json:"completed"`
+	// PayoutSuccess indicates if the payout was successful.
+	PayoutSuccess bool `json:"payout_success"`
+	// Remark indicates the bank transaction reference/status or error message.
+	Remark string `json:"remark"`
 	// Signature is the callback signature for verification.
 	Signature string `json:"signature"`
 }
@@ -253,7 +274,7 @@ func (s *IDRService) VerifyCallback(callback *IDRCallback) error {
 	return s.VerifySignature(
 		string(callback.IDRPayoutID),
 		callback.AccountNumber,
-		callback.Amount,
+		string(callback.Amount),
 		callback.TransactionID,
 		callback.Signature,
 	)
@@ -283,7 +304,7 @@ func (s *IDRService) verifyCallbackSignature(callback *IDRCallback) error {
 	return s.VerifySignature(
 		string(callback.IDRPayoutID),
 		callback.AccountNumber,
-		callback.Amount,
+		string(callback.Amount),
 		callback.TransactionID,
 		callback.Signature,
 	)

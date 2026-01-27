@@ -181,9 +181,13 @@ func TestIDRService_VerifyCallback(t *testing.T) {
 		// Generate valid signature: idrpayout_id + account_number + amount + transaction_id + secret_key
 		callback := &IDRCallback{
 			IDRPayoutID:   "123",
+			TransactionID: "TXN123456789",
+			AccountName:   "John Doe",
 			AccountNumber: "1234567890",
 			Amount:        "50000.00",
-			TransactionID: "TXN123456789",
+			Completed:     true,
+			PayoutSuccess: true,
+			Remark:        "Payment completed successfully",
 			Signature:     signature.Generate("123123456789050000.00TXN123456789test-secret-key"),
 		}
 
@@ -194,10 +198,14 @@ func TestIDRService_VerifyCallback(t *testing.T) {
 	t.Run("rejects invalid signature", func(t *testing.T) {
 		callback := &IDRCallback{
 			IDRPayoutID:   "123",
+			TransactionID: "TXN123",
+			AccountName:   "John Doe",
 			AccountNumber: "1234567890",
 			Amount:        "50000.00",
-			TransactionID: "TXN123",
-			Signature:     signature.Generate("123123456789050000.00TXN123secret-key"),
+			Completed:     false,
+			PayoutSuccess: false,
+			Remark:        "Payment failed",
+			Signature:     "invalid-signature",
 		}
 
 		err := svc.VerifyCallback(callback)
@@ -212,9 +220,13 @@ func TestIDRService_VerifyCallback(t *testing.T) {
 			{
 				name: "missing idrpayout_id",
 				callback: &IDRCallback{
+					TransactionID: "TXN123456789",
+					AccountName:   "John Doe",
 					AccountNumber: "1234567890",
 					Amount:        "50000.00",
-					TransactionID: "TXN123456789",
+					Completed:     true,
+					PayoutSuccess: true,
+					Remark:        "Success",
 					Signature:     "sig",
 				},
 			},
@@ -222,8 +234,25 @@ func TestIDRService_VerifyCallback(t *testing.T) {
 				name: "missing account_number",
 				callback: &IDRCallback{
 					IDRPayoutID:   "123",
-					Amount:        "50000.00",
 					TransactionID: "TXN123456789",
+					AccountName:   "John Doe",
+					Amount:        "50000.00",
+					Completed:     true,
+					PayoutSuccess: true,
+					Remark:        "Success",
+					Signature:     "sig",
+				},
+			},
+			{
+				name: "missing account_number",
+				callback: &IDRCallback{
+					IDRPayoutID:   "123",
+					TransactionID: "TXN123456789",
+					AccountName:   "John Doe",
+					Amount:        "50000.00",
+					Completed:     true,
+					PayoutSuccess: true,
+					Remark:        "Success",
 					Signature:     "sig",
 				},
 			},
@@ -231,8 +260,12 @@ func TestIDRService_VerifyCallback(t *testing.T) {
 				name: "missing amount",
 				callback: &IDRCallback{
 					IDRPayoutID:   "123",
-					AccountNumber: "1234567890",
 					TransactionID: "TXN123456789",
+					AccountName:   "John Doe",
+					AccountNumber: "1234567890",
+					Completed:     true,
+					PayoutSuccess: true,
+					Remark:        "Success",
 					Signature:     "sig",
 				},
 			},
@@ -240,8 +273,12 @@ func TestIDRService_VerifyCallback(t *testing.T) {
 				name: "missing transaction_id",
 				callback: &IDRCallback{
 					IDRPayoutID:   "123",
+					AccountName:   "John Doe",
 					AccountNumber: "1234567890",
 					Amount:        "50000.00",
+					Completed:     true,
+					PayoutSuccess: true,
+					Remark:        "Success",
 					Signature:     "sig",
 				},
 			},
@@ -249,9 +286,13 @@ func TestIDRService_VerifyCallback(t *testing.T) {
 				name: "missing signature",
 				callback: &IDRCallback{
 					IDRPayoutID:   "123",
+					TransactionID: "TXN123456789",
+					AccountName:   "John Doe",
 					AccountNumber: "1234567890",
 					Amount:        "50000.00",
-					TransactionID: "TXN123456789",
+					Completed:     true,
+					PayoutSuccess: true,
+					Remark:        "Success",
 				},
 			},
 		}
@@ -269,12 +310,15 @@ func TestIDRService_VerifyCallbackWithIP(t *testing.T) {
 	t.Run("verifies callback with whitelisted IP", func(t *testing.T) {
 		c := client.New("auth-key", "secret-key", client.WithCallbackIPWhitelist("192.168.1.1"))
 		svc := NewIDRService(c)
-
 		callback := &IDRCallback{
 			IDRPayoutID:   "123",
+			TransactionID: "TXN123",
+			AccountName:   "John Doe",
 			AccountNumber: "1234567890",
 			Amount:        "50000.00",
-			TransactionID: "TXN123",
+			Completed:     true,
+			PayoutSuccess: true,
+			Remark:        "Success",
 			Signature:     signature.Generate("123123456789050000.00TXN123secret-key"),
 		}
 
@@ -288,9 +332,13 @@ func TestIDRService_VerifyCallbackWithIP(t *testing.T) {
 
 		callback := &IDRCallback{
 			IDRPayoutID:   "123",
+			TransactionID: "TXN123",
+			AccountName:   "John Doe",
 			AccountNumber: "1234567890",
 			Amount:        "50000.00",
-			TransactionID: "TXN123",
+			Completed:     true,
+			PayoutSuccess: true,
+			Remark:        "Success",
 			Signature:     signature.Generate("123123456789050000.00TXN123secret-key"),
 		}
 
@@ -305,9 +353,13 @@ func TestIDRService_VerifyCallbackWithIP(t *testing.T) {
 
 		callback := &IDRCallback{
 			IDRPayoutID:   "123",
+			TransactionID: "TXN123",
+			AccountName:   "John Doe",
 			AccountNumber: "1234567890",
 			Amount:        "50000.00",
-			TransactionID: "TXN123",
+			Completed:     true,
+			PayoutSuccess: true,
+			Remark:        "Success",
 			Signature:     signature.Generate("123123456789050000.00TXN123secret-key"),
 		}
 

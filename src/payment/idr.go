@@ -90,15 +90,27 @@ type IDRStatusResponse struct {
 }
 
 // IDRCallback represents the callback data received from GSPAY2 for IDR payments.
+//
+// According to GSPAY2 documentation, the callback contains:
+//   - idrpayment_id: Payment ID (bigint)
+//   - transaction_id: Unique transaction ID submitted
+//   - amount: Amount received (decimal, 2 decimal places)
+//   - status: Payment status (0=Pending/Expired, 1=Success, 2=Timeout/Failed)
+//   - remark: Bank transaction reference/status
+//   - signature: MD5 hash verification
+//
+// Signature formula: idrpayment_id + amount + transaction_id + status + operator_secret_key
 type IDRCallback struct {
-	// IDRPaymentID is the unique payment ID.
-	IDRPaymentID string `json:"idrpayment_id"`
-	// Amount is the payment amount (with 2 decimal places, e.g., "10000.00").
-	Amount string `json:"amount"`
+	// IDRPaymentID is the unique payment ID (bigint from GSPAY2).
+	IDRPaymentID json.Number `json:"idrpayment_id"`
 	// TransactionID is the original transaction ID.
 	TransactionID string `json:"transaction_id"`
+	// Amount is the payment amount (with 2 decimal places, e.g., "10000.00").
+	Amount json.Number `json:"amount"`
 	// Status is the payment status.
 	Status constants.PaymentStatus `json:"status"`
+	// Remark indicates the bank transaction reference/status.
+	Remark string `json:"remark"`
 	// Signature is the callback signature for verification.
 	Signature string `json:"signature"`
 }
@@ -260,8 +272,8 @@ func (s *IDRService) formatAmount(amountStr string) (string, error) {
 // use [IDRService.VerifyCallbackWithIP] instead.
 func (s *IDRService) VerifyCallback(callback *IDRCallback) error {
 	return s.VerifySignature(
-		callback.IDRPaymentID,
-		callback.Amount,
+		string(callback.IDRPaymentID),
+		string(callback.Amount),
 		callback.TransactionID,
 		callback.Status,
 		callback.Signature,
@@ -299,8 +311,8 @@ func (s *IDRService) VerifyCallbackWithIP(callback *IDRCallback, sourceIP string
 // Deprecated: Use VerifySignature directly instead.
 func (s *IDRService) verifyCallbackSignature(callback *IDRCallback) error {
 	return s.VerifySignature(
-		callback.IDRPaymentID,
-		callback.Amount,
+		string(callback.IDRPaymentID),
+		string(callback.Amount),
 		callback.TransactionID,
 		callback.Status,
 		callback.Signature,

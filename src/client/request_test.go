@@ -181,6 +181,65 @@ func TestDoRequest(t *testing.T) {
 		assert.Equal(t, 200, resp.Code)
 		assert.Equal(t, 3, attempts)
 	})
+
+	t.Run("exponential backoff timing", func(t *testing.T) {
+		attemptTimes := make([]time.Time, 0, 3)
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			attemptTimes = append(attemptTimes, time.Now())
+			if len(attemptTimes) < 3 {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"code":    200,
+				"message": "success",
+			})
+		}))
+		defer server.Close()
+
+		c := New(
+			"auth-key",
+			"secret-key",
+			WithBaseURL(server.URL),
+			WithRetries(2),
+			WithRetryWait(10*time.Millisecond, 100*time.Millisecond),
+		)
+		resp, err := c.Post(context.Background(), "/test", nil)
+
+		require.NoError(t, err)
+		assert.Equal(t, 200, resp.Code)
+		require.Len(t, attemptTimes, 3)
+		diff1 := attemptTimes[1].Sub(attemptTimes[0])
+		diff2 := attemptTimes[2].Sub(attemptTimes[1])
+		assert.True(t, diff1 >= 10*time.Millisecond, "first retry delay should be at least 10ms")
+		assert.True(t, diff2 >= 20*time.Millisecond, "second retry delay should be at least 20ms")
+	})
+
+	t.Run("fails after retries exhausted", func(t *testing.T) {
+		attempts := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		defer server.Close()
+
+		c := New(
+			"auth-key",
+			"secret-key",
+			WithBaseURL(server.URL),
+			WithRetries(2),
+			WithRetryWait(1*time.Millisecond, 10*time.Millisecond),
+		)
+		_, err := c.Post(context.Background(), "/test", nil)
+
+		require.Error(t, err)
+		assert.Equal(t, 3, attempts) // initial + 2 retries
+		assert.Contains(t, err.Error(), "request failed after 2 retries")
+		apiErr := errors.GetAPIError(err)
+		require.NotNil(t, apiErr)
+		assert.Equal(t, 500, apiErr.Code)
+	})
 }
 
 func TestParseData(t *testing.T) {

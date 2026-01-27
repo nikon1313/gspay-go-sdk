@@ -62,10 +62,12 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body an
 	}()
 
 	var lastErr error
+	var apiResp Response
+	var success bool
 	for attempt := 0; attempt <= c.Retries; attempt++ {
 		if attempt > 0 {
 			// Exponential backoff
-			waitTime := min(c.RetryWaitMin*time.Duration(attempt), c.RetryWaitMax)
+			waitTime := min(c.RetryWaitMin*time.Duration(1<<(attempt-1)), c.RetryWaitMax)
 			select {
 			case <-ctx.Done():
 				return nil, ctx.Err()
@@ -91,12 +93,12 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body an
 
 		resp, err := c.HTTPClient.Do(req)
 		if err != nil {
-			lastErr = err
+			lastErr = fmt.Errorf("%w: %v", errors.ErrRequestFailed, err)
 			// Retry on transient network errors
 			if attempt < c.Retries {
 				continue
 			}
-			return nil, fmt.Errorf("%w: %v", errors.ErrRequestFailed, err)
+			break
 		}
 
 		respBuf := gc.Default.Get()
@@ -106,11 +108,11 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body an
 		if err != nil {
 			respBuf.Reset()
 			gc.Default.Put(respBuf)
-			lastErr = err
+			lastErr = fmt.Errorf("failed to read response body: %w", err)
 			if attempt < c.Retries {
 				continue
 			}
-			return nil, fmt.Errorf("failed to read response body: %w", err)
+			break
 		}
 
 		// Handle HTTP errors - retry on server errors (5xx) or 404
@@ -126,7 +128,7 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body an
 			if (resp.StatusCode >= 500 || resp.StatusCode == 404) && attempt < c.Retries {
 				continue
 			}
-			return nil, lastErr
+			break
 		}
 
 		// Handle empty response
@@ -137,15 +139,15 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body an
 			if attempt < c.Retries {
 				continue
 			}
-			return nil, lastErr
+			break
 		}
 
 		// Parse response
-		var apiResp Response
 		if err := json.Unmarshal(respBuf.Bytes(), &apiResp); err != nil {
 			respBuf.Reset()
 			gc.Default.Put(respBuf)
-			return nil, fmt.Errorf("%w: %v", errors.ErrInvalidJSON, err)
+			lastErr = fmt.Errorf("%w: %v", errors.ErrInvalidJSON, err)
+			break
 		}
 
 		// Debug logging
@@ -155,7 +157,7 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body an
 
 		// Check for API-level errors
 		if !apiResp.IsSuccess() {
-			err := &errors.APIError{
+			lastErr = &errors.APIError{
 				Code:        apiResp.Code,
 				Message:     apiResp.Message,
 				Endpoint:    endpoint,
@@ -163,17 +165,24 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body an
 			}
 			respBuf.Reset()
 			gc.Default.Put(respBuf)
-			return nil, err
+		} else {
+			success = true
 		}
 
-		// Success, return response and clean up buffer
+		// Clean up buffer
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return &apiResp, nil
+
+		if success {
+			break
+		}
 	}
 
+	if success {
+		return &apiResp, nil
+	}
 	if lastErr != nil {
-		return nil, lastErr
+		return nil, fmt.Errorf("request failed after %d retries: %w", c.Retries, lastErr)
 	}
 	return nil, fmt.Errorf("request failed after %d retries", c.Retries)
 }

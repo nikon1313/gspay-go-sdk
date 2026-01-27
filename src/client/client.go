@@ -49,6 +49,8 @@ type Client struct {
 	CallbackIPWhitelist []string
 	// parsedIPNets contains parsed CIDR networks for efficient IP checking.
 	parsedIPNets []*net.IPNet
+	// Debug enables debug logging of API requests and responses.
+	Debug bool
 	// parsedIPs contains parsed individual IP addresses.
 	parsedIPs []net.IP
 }
@@ -85,6 +87,13 @@ func WithRetries(retries int) Option {
 		if retries >= 0 {
 			c.Retries = retries
 		}
+	}
+}
+
+// WithDebug enables debug logging of API requests and responses.
+func WithDebug(debug bool) Option {
+	return func(c *Client) {
+		c.Debug = debug
 	}
 }
 

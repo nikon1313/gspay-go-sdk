@@ -17,6 +17,7 @@ package payout
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -60,7 +61,7 @@ type idrAPIRequest struct {
 // IDRResponse represents the response from creating an IDR payout.
 type IDRResponse struct {
 	// IDRPayoutID is the unique payout ID assigned by GSPAY2.
-	IDRPayoutID string `json:"idrpayout_id"`
+	IDRPayoutID json.Number `json:"idrpayout_id"`
 	// Status is the initial payout status.
 	Status constants.PaymentStatus `json:"status"`
 }
@@ -68,7 +69,15 @@ type IDRResponse struct {
 // IDRStatusResponse represents the response from querying IDR payout status.
 type IDRStatusResponse struct {
 	// IDRPayoutID is the unique payout ID.
-	IDRPayoutID string `json:"idrpayout_id"`
+	IDRPayoutID json.Number `json:"idrpayout_id"`
+	// TransactionID is the transaction ID.
+	TransactionID string `json:"transaction_id"`
+	// AccountName is the recipient's account name.
+	AccountName string `json:"account_name"`
+	// AccountNumber is the recipient's account number.
+	AccountNumber string `json:"account_number"`
+	// Amount is the payout amount.
+	Amount json.Number `json:"amount"`
 	// Status is the current payout status.
 	Status constants.PaymentStatus `json:"status"`
 	// Completed indicates if the payout has been completed.
@@ -77,12 +86,14 @@ type IDRStatusResponse struct {
 	PayoutSuccess bool `json:"payout_success"`
 	// Remark contains additional information about the payout.
 	Remark string `json:"remark"`
+	// Signature is the response signature.
+	Signature string `json:"signature"`
 }
 
 // IDRCallback represents the callback data received from GSPAY2 for IDR payouts.
 type IDRCallback struct {
 	// IDRPayoutID is the unique payout ID.
-	IDRPayoutID string `json:"idrpayout_id"`
+	IDRPayoutID json.Number `json:"idrpayout_id"`
 	// AccountNumber is the recipient's account number.
 	AccountNumber string `json:"account_number"`
 	// Amount is the payout amount (with 2 decimal places, e.g., "10000.00").

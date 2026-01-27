@@ -75,6 +75,36 @@ func main() {
 		if paymentResp.QR != "" {
 			fmt.Printf("QR Code Data: %s\n", paymentResp.QR)
 		}
+
+		// Example 1.1: Get Status of IDR Payment
+		fmt.Println("=== Getting IDR Payment Status ===")
+		statusResp, err := paymentSvc.GetStatus(ctx, paymentResp.TransactionID)
+		if err != nil {
+			if apiErr := errors.GetAPIError(err); apiErr != nil {
+				log.Printf("API Error: %d - %s", apiErr.Code, apiErr.Message)
+			} else {
+				log.Printf("Error: %v", err)
+			}
+		} else {
+			fmt.Printf("Payment ID: %s\n", statusResp.IDRPaymentID)
+			fmt.Printf("Transaction ID: %s\n", statusResp.TransactionID)
+			fmt.Printf("Player Username: %s\n", statusResp.PlayerUsername)
+			fmt.Printf("Status: %s\n", statusResp.Status)
+			fmt.Printf("Amount: %s\n", statusResp.Amount)
+			fmt.Printf("Completed: %t\n", statusResp.Completed)
+			fmt.Printf("Success: %t\n", statusResp.Success)
+			if statusResp.Remark != "" {
+				fmt.Printf("Remark: %s\n", statusResp.Remark)
+			}
+			fmt.Printf("Signature: %s\n", statusResp.Signature)
+
+			// Verify the signature
+			if err := paymentSvc.VerifyStatusSignature(statusResp); err != nil {
+				log.Printf("Signature verification failed: %v", err)
+			} else {
+				fmt.Println("Signature verification successful")
+			}
+		}
 	}
 
 	fmt.Println()

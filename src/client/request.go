@@ -148,6 +148,11 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body an
 			return nil, fmt.Errorf("%w: %v", errors.ErrInvalidJSON, err)
 		}
 
+		// Debug logging
+		if c.Debug {
+			fmt.Printf("DEBUG API Response for %s: %s\n", endpoint, string(respBuf.Bytes()))
+		}
+
 		// Check for API-level errors
 		if !apiResp.IsSuccess() {
 			err := &errors.APIError{

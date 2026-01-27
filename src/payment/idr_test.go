@@ -116,7 +116,7 @@ func TestIDRService_GetStatus(t *testing.T) {
 			json.NewEncoder(w).Encode(map[string]any{
 				"code":    200,
 				"message": "success",
-				"data":    `{"idrpayment_id":"PAY123","status":1,"amount":"50000.00"}`,
+				"data":    `{"idrpayment_id":123,"transaction_id":"TXN123456789","player_username":"demo_user","status":1,"amount":50000.00,"completed":true,"success":true,"remark":"success","signature":"sig"}`,
 			})
 		}))
 		defer server.Close()
@@ -128,8 +128,55 @@ func TestIDRService_GetStatus(t *testing.T) {
 
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		assert.Equal(t, "PAY123", resp.IDRPaymentID)
+		assert.Equal(t, json.Number("123"), resp.IDRPaymentID)
+		assert.Equal(t, "TXN123456789", resp.TransactionID)
+		assert.Equal(t, "demo_user", resp.PlayerUsername)
 		assert.Equal(t, constants.StatusSuccess, resp.Status)
+		assert.Equal(t, json.Number("50000.00"), resp.Amount)
+		assert.True(t, resp.Completed)
+		assert.True(t, resp.Success)
+		assert.Equal(t, "success", resp.Remark)
+		assert.Equal(t, "sig", resp.Signature)
+	})
+}
+
+func TestIDRService_VerifyStatusSignature(t *testing.T) {
+	c := client.New("auth-key", "test-secret-key")
+	svc := NewIDRService(c)
+
+	t.Run("verifies valid status signature", func(t *testing.T) {
+		status := &IDRStatusResponse{
+			IDRPaymentID:   "123",
+			TransactionID:  "TXN123456789",
+			PlayerUsername: "demo_user",
+			Status:         1,
+			Amount:         "50000.00",
+			Completed:      true,
+			Success:        true,
+			Remark:         "success",
+		}
+		// Generate correct signature
+		status.Signature = signature.Generate("12350000.00TXN1234567891test-secret-key")
+
+		err := svc.VerifyStatusSignature(status)
+		assert.NoError(t, err)
+	})
+
+	t.Run("rejects invalid status signature", func(t *testing.T) {
+		status := &IDRStatusResponse{
+			IDRPaymentID:   "123",
+			TransactionID:  "TXN123456789",
+			PlayerUsername: "demo_user",
+			Status:         1,
+			Amount:         "50000.00",
+			Completed:      true,
+			Success:        true,
+			Remark:         "success",
+			Signature:      "invalid",
+		}
+
+		err := svc.VerifyStatusSignature(status)
+		assert.ErrorIs(t, err, errors.ErrInvalidSignature)
 	})
 }
 

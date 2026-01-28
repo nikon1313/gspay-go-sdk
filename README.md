@@ -7,7 +7,7 @@
 
 An **unofficial** Go SDK for the GSPAY2 Payment Gateway API. This SDK provides a comprehensive, idiomatic Go interface for payment processing, payouts, and balance queries.
 
-> **Disclaimer**: This is an unofficial SDK and is not affiliated with, endorsed by, or officially supported by GSPAY. It was independently developed to provide Go compatibility for integrating with the GSPAY2 Payment Gateway API. Use at your own discretion.
+> **Disclaimer**: This is an unofficial SDK and is not affiliated with, endorsed by, or officially supported by GSPAY. It was independently developed to provide Go compatibility for integrating with the GSPAY2 Payment Gateway API. Use at your own discretion. [Read more](#disclaimer)
 
 ## Features
 

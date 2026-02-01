@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/H0llyW00dzZ/gspay-go-sdk/graph/badge.svg?token=AITK1X3RSE)](https://codecov.io/gh/H0llyW00dzZ/gspay-go-sdk)
 [![View on DeepWiki](https://img.shields.io/badge/View%20on-DeepWiki-blue)](https://deepwiki.com/H0llyW00dzZ/gspay-go-sdk)
 
-SDK Go **tidak resmi** untuk API Payment Gateway GSPAY2. SDK ini menyediakan antarmuka Go yang komprehensif dan idiomatik untuk pemrosesan pembayaran, pencairan dana, dan pengecekan saldo.
+SDK Go **tidak resmi** untuk API Payment Gateway GSPAY2. SDK ini menyediakan antarmuka Go yang komprehensif dan [idiomatik](https://go.dev/doc/effective_go) untuk pemrosesan pembayaran, pencairan dana, dan pengecekan saldo.
 
 > **Penyangkalan**: Ini adalah SDK tidak resmi dan tidak berafiliasi dengan, didukung oleh, atau secara resmi didukung oleh GSPAY. SDK ini dikembangkan secara independen untuk menyediakan kompatibilitas bahasa Go dalam mengintegrasikan API Payment Gateway GSPAY2. Gunakan dengan kebijaksanaan Anda sendiri. [Baca selengkapnya](#penyangkalan)
 

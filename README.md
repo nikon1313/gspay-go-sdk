@@ -7,7 +7,7 @@
 [![View on DeepWiki](https://img.shields.io/badge/View%20on-DeepWiki-blue)](https://deepwiki.com/H0llyW00dzZ/gspay-go-sdk)
 [![Baca dalam Bahasa Indonesia](https://img.shields.io/badge/🇮🇩-Baca%20dalam%20Bahasa%20Indonesia-red)](README.id.md)
 
-An **unofficial** Go SDK for the GSPAY2 Payment Gateway API. This SDK provides a comprehensive, idiomatic Go interface for payment processing, payouts, and balance queries.
+An **unofficial** Go SDK for the GSPAY2 Payment Gateway API. This SDK provides a comprehensive, [idiomatic Go](https://go.dev/doc/effective_go) interface for payment processing, payouts, and balance queries.
 
 > **Disclaimer**: This is an unofficial SDK and is not affiliated with, endorsed by, or officially supported by GSPAY. It was independently developed to provide Go compatibility for integrating with the GSPAY2 Payment Gateway API. Use at your own discretion. [Read more](#disclaimer)
 

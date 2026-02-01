@@ -213,7 +213,7 @@ func (s *IDRService) GetStatus(ctx context.Context, transactionID string) (*IDRS
 // Note: Amount should be formatted with 2 decimal places (e.g., "10000.00").
 func (s *IDRService) VerifySignature(id, accountNumber, amount, transactionID, receivedSignature string) error {
 	lang := errors.Language(s.client.Language)
-	
+
 	// Check required fields
 	if id == "" {
 		return errors.NewMissingFieldError(lang, "id")

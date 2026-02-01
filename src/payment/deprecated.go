@@ -26,7 +26,7 @@ import (
 // Deprecated: Use VerifySignature directly instead.
 func (s *USDTService) verifyCallbackSignature(callback *USDTCallback) error {
 	lang := errors.Language(s.client.Language)
-	
+
 	// Check required fields
 	if callback.CryptoPaymentID == "" {
 		return errors.NewMissingFieldError(lang, "cryptopayment_id")

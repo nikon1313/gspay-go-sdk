@@ -128,7 +128,7 @@ func (s *USDTService) Create(ctx context.Context, req *USDTRequest) (*USDTRespon
 // Note: Amount should be formatted with 2 decimal places (e.g., "10.50").
 func (s *USDTService) VerifySignature(cryptoPaymentID, amount, transactionID string, status constants.PaymentStatus, receivedSignature string) error {
 	lang := errors.Language(s.client.Language)
-	
+
 	// Check required fields
 	if cryptoPaymentID == "" {
 		return errors.NewMissingFieldError(lang, "cryptopayment_id")

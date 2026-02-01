@@ -32,9 +32,9 @@ const (
 	MsgInvalidIPAddress     MessageKey = "invalid_ip_address"
 
 	// Validation error messages.
-	MsgMinAmountIDR       MessageKey = "min_amount_idr"
-	MsgMinAmountUSDT      MessageKey = "min_amount_usdt"
-	MsgMinPayoutAmountIDR MessageKey = "min_payout_amount_idr"
+	MsgMinAmountIDR        MessageKey = "min_amount_idr"
+	MsgMinAmountUSDT       MessageKey = "min_amount_usdt"
+	MsgMinPayoutAmountIDR  MessageKey = "min_payout_amount_idr"
 	MsgInvalidAmountFormat MessageKey = "invalid_amount_format"
 )
 

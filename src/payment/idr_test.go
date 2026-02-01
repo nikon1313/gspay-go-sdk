@@ -15,7 +15,6 @@
 package payment
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -55,7 +54,7 @@ func TestIDRService_Create(t *testing.T) {
 		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
 		svc := NewIDRService(c)
 
-		resp, err := svc.Create(context.Background(), &IDRRequest{
+		resp, err := svc.Create(t.Context(), &IDRRequest{
 			TransactionID: "TXN123456789",
 			Username:      "user123",
 			Amount:        50000,
@@ -73,7 +72,7 @@ func TestIDRService_Create(t *testing.T) {
 		svc := NewIDRService(c)
 
 		// Too short
-		_, err := svc.Create(context.Background(), &IDRRequest{
+		_, err := svc.Create(t.Context(), &IDRRequest{
 			TransactionID: "TXN",
 			Username:      "user123",
 			Amount:        50000,
@@ -81,7 +80,7 @@ func TestIDRService_Create(t *testing.T) {
 		assert.ErrorIs(t, err, errors.ErrInvalidTransactionID)
 
 		// Too long
-		_, err = svc.Create(context.Background(), &IDRRequest{
+		_, err = svc.Create(t.Context(), &IDRRequest{
 			TransactionID: "TXN12345678901234567890",
 			Username:      "user123",
 			Amount:        50000,
@@ -93,7 +92,7 @@ func TestIDRService_Create(t *testing.T) {
 		c := client.New("auth-key", "secret-key")
 		svc := NewIDRService(c)
 
-		_, err := svc.Create(context.Background(), &IDRRequest{
+		_, err := svc.Create(t.Context(), &IDRRequest{
 			TransactionID: "TXN123456789",
 			Username:      "user123",
 			Amount:        5000, // Less than 10000
@@ -124,7 +123,7 @@ func TestIDRService_GetStatus(t *testing.T) {
 		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
 		svc := NewIDRService(c)
 
-		resp, err := svc.GetStatus(context.Background(), "TXN123456789")
+		resp, err := svc.GetStatus(t.Context(), "TXN123456789")
 
 		require.NoError(t, err)
 		require.NotNil(t, resp)

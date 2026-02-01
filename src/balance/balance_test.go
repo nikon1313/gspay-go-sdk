@@ -15,7 +15,6 @@
 package balance
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -44,7 +43,7 @@ func TestService_Get(t *testing.T) {
 		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
 		svc := NewService(c)
 
-		resp, err := svc.Get(context.Background())
+		resp, err := svc.Get(t.Context())
 
 		require.NoError(t, err)
 		assert.Equal(t, "100000.00", resp)
@@ -63,7 +62,7 @@ func TestService_Get(t *testing.T) {
 		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
 		svc := NewService(c)
 
-		_, err := svc.Get(context.Background())
+		_, err := svc.Get(t.Context())
 
 		require.Error(t, err)
 	})

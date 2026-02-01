@@ -46,7 +46,7 @@ func TestDoRequest(t *testing.T) {
 		defer server.Close()
 
 		c := New("auth-key", "secret-key", WithBaseURL(server.URL))
-		resp, err := c.Post(context.Background(), "/test", map[string]string{"key": "value"})
+		resp, err := c.Post(t.Context(), "/test", map[string]string{"key": "value"})
 
 		require.NoError(t, err)
 		assert.Equal(t, 200, resp.Code)
@@ -67,7 +67,7 @@ func TestDoRequest(t *testing.T) {
 		defer server.Close()
 
 		c := New("auth-key", "secret-key", WithBaseURL(server.URL))
-		resp, err := c.Get(context.Background(), "/test", map[string]string{"key": "value"})
+		resp, err := c.Get(t.Context(), "/test", map[string]string{"key": "value"})
 
 		require.NoError(t, err)
 		assert.Equal(t, 200, resp.Code)
@@ -84,7 +84,7 @@ func TestDoRequest(t *testing.T) {
 		defer server.Close()
 
 		c := New("auth-key", "secret-key", WithBaseURL(server.URL))
-		_, err := c.Post(context.Background(), "/test", nil)
+		_, err := c.Post(t.Context(), "/test", nil)
 
 		require.Error(t, err)
 		apiErr := errors.GetAPIError(err)
@@ -100,7 +100,7 @@ func TestDoRequest(t *testing.T) {
 		defer server.Close()
 
 		c := New("auth-key", "secret-key", WithBaseURL(server.URL), WithRetries(0))
-		_, err := c.Post(context.Background(), "/test", nil)
+		_, err := c.Post(t.Context(), "/test", nil)
 
 		require.Error(t, err)
 		apiErr := errors.GetAPIError(err)
@@ -116,7 +116,7 @@ func TestDoRequest(t *testing.T) {
 		defer server.Close()
 
 		c := New("auth-key", "secret-key", WithBaseURL(server.URL), WithRetries(0))
-		_, err := c.Post(context.Background(), "/test", nil)
+		_, err := c.Post(t.Context(), "/test", nil)
 
 		require.Error(t, err)
 		assert.ErrorIs(t, err, errors.ErrEmptyResponse)
@@ -130,7 +130,7 @@ func TestDoRequest(t *testing.T) {
 		defer server.Close()
 
 		c := New("auth-key", "secret-key", WithBaseURL(server.URL), WithRetries(0))
-		_, err := c.Post(context.Background(), "/test", nil)
+		_, err := c.Post(t.Context(), "/test", nil)
 
 		require.Error(t, err)
 		assert.ErrorIs(t, err, errors.ErrInvalidJSON)
@@ -145,7 +145,7 @@ func TestDoRequest(t *testing.T) {
 
 		c := New("auth-key", "secret-key", WithBaseURL(server.URL))
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(t.Context())
 		cancel() // Cancel immediately
 
 		_, err := c.Post(ctx, "/test", nil)
@@ -175,7 +175,7 @@ func TestDoRequest(t *testing.T) {
 			WithRetries(3),
 			WithRetryWait(10*time.Millisecond, 50*time.Millisecond),
 		)
-		resp, err := c.Post(context.Background(), "/test", nil)
+		resp, err := c.Post(t.Context(), "/test", nil)
 
 		require.NoError(t, err)
 		assert.Equal(t, 200, resp.Code)
@@ -205,7 +205,7 @@ func TestDoRequest(t *testing.T) {
 			WithRetries(2),
 			WithRetryWait(10*time.Millisecond, 100*time.Millisecond),
 		)
-		resp, err := c.Post(context.Background(), "/test", nil)
+		resp, err := c.Post(t.Context(), "/test", nil)
 
 		require.NoError(t, err)
 		assert.Equal(t, 200, resp.Code)
@@ -231,7 +231,7 @@ func TestDoRequest(t *testing.T) {
 			WithRetries(2),
 			WithRetryWait(1*time.Millisecond, 10*time.Millisecond),
 		)
-		_, err := c.Post(context.Background(), "/test", nil)
+		_, err := c.Post(t.Context(), "/test", nil)
 
 		require.Error(t, err)
 		assert.Equal(t, 3, attempts) // initial + 2 retries

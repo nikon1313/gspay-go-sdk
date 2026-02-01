@@ -15,7 +15,6 @@
 package payment
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -54,7 +53,7 @@ func TestUSDTService_Create(t *testing.T) {
 		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
 		svc := NewUSDTService(c)
 
-		resp, err := svc.Create(context.Background(), &USDTRequest{
+		resp, err := svc.Create(t.Context(), &USDTRequest{
 			TransactionID: "TXN123456789",
 			Username:      "user123",
 			Amount:        10.50,
@@ -70,7 +69,7 @@ func TestUSDTService_Create(t *testing.T) {
 		c := client.New("auth-key", "secret-key")
 		svc := NewUSDTService(c)
 
-		_, err := svc.Create(context.Background(), &USDTRequest{
+		_, err := svc.Create(t.Context(), &USDTRequest{
 			TransactionID: "TXN123456789",
 			Username:      "user123",
 			Amount:        0.50, // Less than 1.00

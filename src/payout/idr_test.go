@@ -15,7 +15,6 @@
 package payout
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -57,7 +56,7 @@ func TestIDRService_Create(t *testing.T) {
 		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
 		svc := NewIDRService(c)
 
-		resp, err := svc.Create(context.Background(), &IDRRequest{
+		resp, err := svc.Create(t.Context(), &IDRRequest{
 			TransactionID: "TXN123456789",
 			Username:      "user123",
 			AccountName:   "John Doe",
@@ -75,7 +74,7 @@ func TestIDRService_Create(t *testing.T) {
 		c := client.New("auth-key", "secret-key")
 		svc := NewIDRService(c)
 
-		_, err := svc.Create(context.Background(), &IDRRequest{
+		_, err := svc.Create(t.Context(), &IDRRequest{
 			TransactionID: "TXN123456789",
 			Username:      "user123",
 			AccountName:   "John Doe",
@@ -92,7 +91,7 @@ func TestIDRService_Create(t *testing.T) {
 		c := client.New("auth-key", "secret-key")
 		svc := NewIDRService(c)
 
-		_, err := svc.Create(context.Background(), &IDRRequest{
+		_, err := svc.Create(t.Context(), &IDRRequest{
 			TransactionID: "TXN123456789",
 			Username:      "user123",
 			AccountName:   "John Doe",
@@ -125,7 +124,7 @@ func TestIDRService_Create(t *testing.T) {
 		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
 		svc := NewIDRService(c)
 
-		_, err := svc.Create(context.Background(), &IDRRequest{
+		_, err := svc.Create(t.Context(), &IDRRequest{
 			TransactionID: "TXN123456789",
 			Username:      "user123",
 			AccountName:   "John Doe",
@@ -156,7 +155,7 @@ func TestIDRService_GetStatus(t *testing.T) {
 		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
 		svc := NewIDRService(c)
 
-		resp, err := svc.GetStatus(context.Background(), "TXN123456789")
+		resp, err := svc.GetStatus(t.Context(), "TXN123456789")
 
 		require.NoError(t, err)
 		require.NotNil(t, resp)

@@ -36,6 +36,9 @@ const (
 	MsgMinAmountUSDT       MessageKey = "min_amount_usdt"
 	MsgMinPayoutAmountIDR  MessageKey = "min_payout_amount_idr"
 	MsgInvalidAmountFormat MessageKey = "invalid_amount_format"
+
+	// Request retry messages.
+	MsgRequestFailedAfterRetries MessageKey = "request_failed_after_retries"
 )
 
 // translations holds all translated messages indexed by language and message key.
@@ -58,6 +61,9 @@ var translations = map[Language]map[MessageKey]string{
 		MsgMinAmountUSDT:       "minimum amount is 1.00 USDT",
 		MsgMinPayoutAmountIDR:  "minimum payout amount is 10000 IDR",
 		MsgInvalidAmountFormat: "invalid amount format",
+
+		// Request retry messages
+		MsgRequestFailedAfterRetries: "request failed after %d retries",
 	},
 	Indonesian: {
 		// Sentinel errors
@@ -77,6 +83,9 @@ var translations = map[Language]map[MessageKey]string{
 		MsgMinAmountUSDT:       "jumlah minimum adalah 1.00 USDT",
 		MsgMinPayoutAmountIDR:  "jumlah pembayaran minimum adalah 10000 IDR",
 		MsgInvalidAmountFormat: "format jumlah tidak valid",
+
+		// Request retry messages
+		MsgRequestFailedAfterRetries: "permintaan gagal setelah %d percobaan",
 	},
 }
 

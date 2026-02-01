@@ -71,11 +71,15 @@ func (e *APIError) Error() string {
 
 // sanitizeEndpoint redacts sensitive information like auth keys from endpoint URLs.
 func sanitizeEndpoint(endpoint string) string {
-	// Redact auth key in operator endpoints: /v2/integrations/operators/{authkey}/...
+	// Redact auth key in operator endpoints:
+	// - /v2/integrations/operator/{authkey}/...  (singular - e.g., balance)
+	// - /v2/integrations/operators/{authkey}/... (plural - e.g., USDT)
 	parts := strings.Split(endpoint, "/")
-	if len(parts) >= 5 && parts[1] == "v2" && parts[2] == "integrations" && parts[3] == "operators" && len(parts[4]) > 0 {
-		parts[4] = "[REDACTED]"
-		return strings.Join(parts, "/")
+	if len(parts) >= 5 && parts[1] == "v2" && parts[2] == "integrations" && len(parts[4]) > 0 {
+		if parts[3] == "operator" || parts[3] == "operators" {
+			parts[4] = "[REDACTED]"
+			return strings.Join(parts, "/")
+		}
 	}
 	return endpoint
 }
@@ -227,4 +231,7 @@ const (
 	KeyMinAmountUSDT       = i18n.MsgMinAmountUSDT
 	KeyMinPayoutAmountIDR  = i18n.MsgMinPayoutAmountIDR
 	KeyInvalidAmountFormat = i18n.MsgInvalidAmountFormat
+
+	// Request retry message keys
+	MsgRequestFailedAfterRetries = i18n.MsgRequestFailedAfterRetries
 )

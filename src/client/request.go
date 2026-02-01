@@ -191,9 +191,9 @@ func (c *Client) executeWithRetry(ctx context.Context, method, fullURL string, r
 	}
 
 	if lastErr != nil {
-		return nil, fmt.Errorf("%s after %d retries: %w", i18n.Get(c.Language, i18n.MsgRequestFailed), c.Retries, lastErr)
+		return nil, fmt.Errorf(i18n.Get(c.Language, i18n.MsgRequestFailedAfterRetries)+": %w", c.Retries, lastErr)
 	}
-	return nil, fmt.Errorf("%s after %d retries", i18n.Get(c.Language, i18n.MsgRequestFailed), c.Retries)
+	return nil, fmt.Errorf(i18n.Get(c.Language, i18n.MsgRequestFailedAfterRetries), c.Retries)
 }
 
 // DoRequest performs an HTTP request with retry logic.

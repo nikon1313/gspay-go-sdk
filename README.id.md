@@ -34,6 +34,7 @@ gspay-go-sdk/
 │   ├── client/      # HTTP client dan konfigurasi
 │   ├── constants/   # Kode bank, channel, kode status
 │   ├── errors/      # Tipe error dan helper
+│   ├── i18n/        # Internasionalisasi (terjemahan bahasa)
 │   ├── payment/     # Layanan pembayaran (IDR, USDT)
 │   ├── payout/      # Layanan pencairan (IDR)
 │   ├── balance/     # Layanan pengecekan saldo
@@ -105,6 +106,26 @@ c := client.New(
 | `WithRetries` | Mengatur jumlah percobaan ulang | `3` |
 | `WithRetryWait` | Mengatur waktu tunggu min/maks antar retry | `500ms` / `2s` |
 | `WithHTTPClient` | Menggunakan HTTP client kustom | Default `http.Client` |
+| `WithLanguage` | Mengatur bahasa pesan error | `i18n.English` |
+
+## Dukungan Bahasa (i18n)
+
+SDK mendukung pesan error terlokalisasi. Bahasa yang didukung saat ini: **English** (default) dan **Indonesian**.
+
+```go
+import (
+    "github.com/H0llyW00dzZ/gspay-go-sdk/src/client"
+    "github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
+)
+
+// Gunakan pesan error dalam Bahasa Indonesia
+c := client.New("auth-key", "secret-key",
+    client.WithLanguage(i18n.Indonesian),
+)
+
+// Sekarang error validasi akan dalam Bahasa Indonesia:
+// "jumlah minimum adalah 10000 IDR" bukan "minimum amount is 10000 IDR"
+```
 
 ## Contoh Penggunaan
 

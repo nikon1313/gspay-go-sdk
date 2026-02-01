@@ -134,7 +134,7 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 
 	// Validate amount (minimum 10000 IDR)
 	if req.Amount < constants.MinAmountIDR {
-		return nil, errors.NewValidationError("amount", "minimum amount is 10000 IDR")
+		return nil, errors.NewValidationError("amount", errors.GetMessage(errors.Language(s.client.Language), errors.KeyMinAmountIDR))
 	}
 
 	// Generate signature: transaction_id + player_username + amount + secret_key
@@ -257,7 +257,7 @@ func (s *IDRService) VerifyStatusSignature(status *IDRStatusResponse) error {
 func (s *IDRService) formatAmount(amountStr string) (string, error) {
 	amount, err := strconv.ParseFloat(amountStr, 64)
 	if err != nil {
-		return "", errors.NewValidationError("amount", "invalid amount format")
+		return "", errors.NewValidationError("amount", errors.GetMessage(errors.Language(s.client.Language), errors.KeyInvalidAmountFormat))
 	}
 	return fmt.Sprintf("%.2f", amount), nil
 }

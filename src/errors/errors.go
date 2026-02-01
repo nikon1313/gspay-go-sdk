@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
 )
 
 // Sentinel errors for common error conditions.
@@ -124,3 +126,72 @@ func GetValidationError(err error) *ValidationError {
 	}
 	return nil
 }
+
+// LocalizedError represents an error with language-specific messages.
+type LocalizedError struct {
+	key  i18n.MessageKey
+	lang i18n.Language
+}
+
+// Error implements the error interface.
+func (e *LocalizedError) Error() string {
+	return i18n.Get(e.lang, e.key)
+}
+
+// Key returns the message key of the error.
+func (e *LocalizedError) Key() i18n.MessageKey {
+	return e.key
+}
+
+// NewLocalizedError creates a new localized error with the specified language and message key.
+func NewLocalizedError(lang i18n.Language, key i18n.MessageKey) *LocalizedError {
+	return &LocalizedError{key: key, lang: lang}
+}
+
+// IsLocalizedError checks if an error is a LocalizedError.
+func IsLocalizedError(err error) bool {
+	var locErr *LocalizedError
+	return errors.As(err, &locErr)
+}
+
+// GetLocalizedError extracts a LocalizedError from an error.
+// Returns nil if the error is not a LocalizedError.
+func GetLocalizedError(err error) *LocalizedError {
+	var locErr *LocalizedError
+	if errors.As(err, &locErr) {
+		return locErr
+	}
+	return nil
+}
+
+// GetMessage is a convenience function that delegates to i18n.Get.
+// It retrieves a message for the specified language and key.
+func GetMessage(lang i18n.Language, key i18n.MessageKey) string {
+	return i18n.Get(lang, key)
+}
+
+// Re-export i18n types for convenience.
+type (
+	// Language is an alias for i18n.Language.
+	Language = i18n.Language
+	// MessageKey is an alias for i18n.MessageKey.
+	MessageKey = i18n.MessageKey
+)
+
+// Re-export message key constants for convenience.
+const (
+	KeyInvalidTransactionID = i18n.MsgInvalidTransactionID
+	KeyInvalidAmount        = i18n.MsgInvalidAmount
+	KeyInvalidBankCode      = i18n.MsgInvalidBankCode
+	KeyInvalidSignature     = i18n.MsgInvalidSignature
+	KeyMissingCallbackField = i18n.MsgMissingCallbackField
+	KeyEmptyResponse        = i18n.MsgEmptyResponse
+	KeyInvalidJSON          = i18n.MsgInvalidJSON
+	KeyRequestFailed        = i18n.MsgRequestFailed
+	KeyIPNotWhitelisted     = i18n.MsgIPNotWhitelisted
+	KeyInvalidIPAddress     = i18n.MsgInvalidIPAddress
+	KeyMinAmountIDR         = i18n.MsgMinAmountIDR
+	KeyMinAmountUSDT        = i18n.MsgMinAmountUSDT
+	KeyMinPayoutAmountIDR   = i18n.MsgMinPayoutAmountIDR
+	KeyInvalidAmountFormat  = i18n.MsgInvalidAmountFormat
+)

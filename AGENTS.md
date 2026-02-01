@@ -42,7 +42,8 @@ go mod tidy
 src/
 ├── client/      # HTTP client, options, helpers
 ├── constants/   # Bank codes, channels, status codes
-├── errors/      # Sentinel errors, APIError, ValidationError
+├── errors/      # Sentinel errors, APIError, ValidationError, LocalizedError
+├── i18n/        # Internationalization (Language, MessageKey, translations)
 ├── payment/     # IDR and USDT payment services
 ├── payout/      # IDR payout service
 ├── balance/     # Balance query service
@@ -155,6 +156,25 @@ return nil, fmt.Errorf("%w: %s", errors.ErrInvalidBankCode, bankCode)
 if apiErr := errors.GetAPIError(err); apiErr != nil {
     // Handle API error
 }
+
+// Localized error messages
+return nil, errors.NewValidationError("amount", 
+    errors.GetMessage(s.client.Language, errors.KeyMinAmountIDR))
+```
+
+### Internationalization (i18n)
+
+```go
+import "github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
+
+// Client with Indonesian error messages
+c := client.New("auth", "secret", client.WithLanguage(i18n.Indonesian))
+
+// Get translated message
+msg := i18n.Get(i18n.Indonesian, i18n.MsgMinAmountIDR)
+// Result: "jumlah minimum adalah 10000 IDR"
+
+// Supported languages: i18n.English (default), i18n.Indonesian
 ```
 
 ### Functional Options Pattern

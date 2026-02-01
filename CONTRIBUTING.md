@@ -54,6 +54,7 @@ gspay-go-sdk/
 │   ├── constants/   # Bank codes, payment statuses, channels
 │   ├── errors/      # Error types and handling
 │   ├── helper/      # Helper utilities
+│   ├── i18n/        # Internationalization (languages, translations)
 │   ├── internal/    # Internal utilities (signature generation)
 │   ├── payment/     # Payment services (IDR, future THB/MYR)
 │   └── payout/      # Payout services (IDR)
@@ -98,6 +99,41 @@ var defaultTimeout = 30 * time.Second // camelCase for internal variables
 - Add doc comments for all exported functions, types, and methods
 - Use proper Go doc format
 - Include usage examples where helpful
+
+### Internationalization (i18n)
+
+When adding user-facing error messages:
+
+1. **Add message key** in `src/i18n/messages.go`:
+   ```go
+   const (
+       MsgNewErrorKey MessageKey = "new_error_key"
+   )
+   ```
+
+2. **Add translations** for all supported languages:
+   ```go
+   var translations = map[Language]map[MessageKey]string{
+       English: {
+           MsgNewErrorKey: "English error message",
+       },
+       Indonesian: {
+           MsgNewErrorKey: "Pesan error dalam Bahasa Indonesia",
+       },
+   }
+   ```
+
+3. **Use localized messages** in validation errors:
+   ```go
+   return errors.NewValidationError("field", 
+       errors.GetMessage(s.client.Language, errors.KeyNewError))
+   ```
+
+4. **Re-export in errors package** for convenience:
+   ```go
+   // src/errors/errors.go
+   const KeyNewError = i18n.MsgNewErrorKey
+   ```
 
 ## 🧪 Testing
 

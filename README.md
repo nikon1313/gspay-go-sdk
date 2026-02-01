@@ -35,6 +35,7 @@ gspay-go-sdk/
 │   ├── client/      # HTTP client and configuration
 │   ├── constants/   # Bank codes, channels, status codes
 │   ├── errors/      # Error types and helpers
+│   ├── i18n/        # Internationalization (language translations)
 │   ├── payment/     # Payment services (IDR, USDT)
 │   ├── payout/      # Payout services (IDR)
 │   ├── balance/     # Balance query service
@@ -106,6 +107,26 @@ c := client.New(
 | `WithRetries` | Set number of retry attempts | `3` |
 | `WithRetryWait` | Set min/max wait between retries | `500ms` / `2s` |
 | `WithHTTPClient` | Use custom HTTP client | Default `http.Client` |
+| `WithLanguage` | Set error message language | `i18n.English` |
+
+## Language Support (i18n)
+
+The SDK supports localized error messages. Currently supported: **English** (default) and **Indonesian**.
+
+```go
+import (
+    "github.com/H0llyW00dzZ/gspay-go-sdk/src/client"
+    "github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
+)
+
+// Use Indonesian error messages
+c := client.New("auth-key", "secret-key",
+    client.WithLanguage(i18n.Indonesian),
+)
+
+// Now validation errors will be in Indonesian:
+// "jumlah minimum adalah 10000 IDR" instead of "minimum amount is 10000 IDR"
+```
 
 ## Usage Examples
 

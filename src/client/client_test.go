@@ -21,6 +21,7 @@ import (
 
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/errors"
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -66,6 +67,11 @@ func TestNew(t *testing.T) {
 	t.Run("ignores negative retries", func(t *testing.T) {
 		c := New("auth-key", "secret-key", WithRetries(-1))
 		assert.Equal(t, constants.DefaultRetries, c.Retries)
+	})
+
+	t.Run("defaults to English language", func(t *testing.T) {
+		c := New("auth-key", "secret-key")
+		assert.Equal(t, i18n.English, c.Language)
 	})
 }
 
@@ -232,6 +238,23 @@ func TestWithCallbackIPWhitelist(t *testing.T) {
 
 		assert.Len(t, c.parsedIPs, 2)    // 192.168.1.1 and 2001:db8::1
 		assert.Len(t, c.parsedIPNets, 2) // 10.0.0.0/8 and 2001:db8::/32
+	})
+}
+
+func TestWithLanguage(t *testing.T) {
+	t.Run("sets language to Indonesian", func(t *testing.T) {
+		c := New("auth", "secret", WithLanguage(i18n.Indonesian))
+		assert.Equal(t, i18n.Indonesian, c.Language)
+	})
+
+	t.Run("sets language to English explicitly", func(t *testing.T) {
+		c := New("auth", "secret", WithLanguage(i18n.English))
+		assert.Equal(t, i18n.English, c.Language)
+	})
+
+	t.Run("ignores invalid language", func(t *testing.T) {
+		c := New("auth", "secret", WithLanguage(i18n.Language("invalid")))
+		assert.Equal(t, i18n.English, c.Language) // should remain default
 	})
 }
 

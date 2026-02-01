@@ -23,6 +23,7 @@ import (
 
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/errors"
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/internal/signature"
 )
 
@@ -53,6 +54,9 @@ type Client struct {
 	Debug bool
 	// parsedIPs contains parsed individual IP addresses.
 	parsedIPs []net.IP
+	// Language is the language for SDK error messages.
+	// Default is English.
+	Language i18n.Language
 }
 
 // Option is a functional option for configuring the Client.
@@ -124,6 +128,20 @@ func WithCallbackIPWhitelist(ips ...string) Option {
 	}
 }
 
+// WithLanguage sets the language for SDK error messages.
+// Default is English. Supported languages: English, Indonesian.
+//
+// Example:
+//
+//	client.New("auth", "secret", client.WithLanguage(i18n.Indonesian))
+func WithLanguage(lang i18n.Language) Option {
+	return func(c *Client) {
+		if lang.IsValid() {
+			c.Language = lang
+		}
+	}
+}
+
 // New creates a new GSPAY2 API client.
 //
 // Parameters:
@@ -139,6 +157,7 @@ func New(authKey, secretKey string, opts ...Option) *Client {
 		Retries:      constants.DefaultRetries,
 		RetryWaitMin: time.Duration(constants.DefaultRetryWaitMin) * time.Millisecond,
 		RetryWaitMax: time.Duration(constants.DefaultRetryWaitMax) * time.Millisecond,
+		Language:     i18n.English,
 	}
 
 	for _, opt := range opts {

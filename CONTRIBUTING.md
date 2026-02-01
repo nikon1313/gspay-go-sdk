@@ -23,7 +23,7 @@ Thank you for your interest in contributing to the GSPAY Go SDK! This document p
 1. **Fork the repository** on GitHub
 2. **Clone your fork**:
    ```bash
-   git clone https://github.com/H0llyW00dzZ/gspay-go-sdk.git
+   git clone https://github.com/YOUR_USERNAME/gspay-go-sdk.git
    cd gspay-go-sdk
    ```
 
@@ -47,13 +47,14 @@ Thank you for your interest in contributing to the GSPAY Go SDK! This document p
 ```
 gspay-go-sdk/
 ├── src/
+│   ├── balance/     # Balance query service
 │   ├── client/      # HTTP client and core functionality
 │   ├── constants/   # Bank codes, payment statuses, channels
 │   ├── errors/      # Error types and handling
+│   ├── helper/      # Helper utilities
+│   ├── internal/    # Internal utilities (signature generation)
 │   ├── payment/     # Payment services (IDR, future THB/MYR)
-│   ├── payout/      # Payout services (IDR)
-│   ├── balance/     # Balance query service
-│   └── internal/    # Internal utilities (signature generation)
+│   └── payout/      # Payout services (IDR)
 ├── examples/        # Usage examples
 ├── go.mod           # Go module definition
 └── README.md        # Main documentation

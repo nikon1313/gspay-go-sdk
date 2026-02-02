@@ -25,6 +25,8 @@ const (
 
 	// SDKVersion is the current version of this SDK.
 	// This should be updated with each release.
+	//
+	// Note: the versioning its based of heap like unix time.
 	SDKVersion = "0.3.7"
 
 	// SDKRepository is the GitHub repository URL for this SDK.

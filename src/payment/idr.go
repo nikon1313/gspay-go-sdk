@@ -296,5 +296,5 @@ func (s *IDRService) VerifyCallbackWithIP(callback *IDRCallback, sourceIP string
 	}
 
 	// Then verify signature
-	return s.verifyCallbackSignature(callback)
+	return s.VerifyCallback(callback)
 }

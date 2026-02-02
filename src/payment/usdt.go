@@ -17,11 +17,11 @@ package payment
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/client"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/errors"
+	amountfmt "github.com/H0llyW00dzZ/gspay-go-sdk/src/helper/amount"
 )
 
 // USDTRequest represents a request to create a USDT payment.
@@ -86,7 +86,7 @@ func (s *USDTService) Create(ctx context.Context, req *USDTRequest) (*USDTRespon
 	}
 
 	// Format amount with 2 decimal places
-	formattedAmount := fmt.Sprintf("%.2f", req.Amount)
+	formattedAmount := amountfmt.FormatFloat(req.Amount)
 
 	// Generate signature: transaction_id + player_username + amount + secret_key
 	signatureData := fmt.Sprintf("%s%s%s%s",
@@ -144,11 +144,10 @@ func (s *USDTService) VerifySignature(cryptoPaymentID, amount, transactionID str
 	}
 
 	// Format amount with 2 decimal places
-	amountFloat, err := strconv.ParseFloat(amount, 64)
+	formattedAmount, err := amountfmt.Format(amount, s.client.Language)
 	if err != nil {
-		return errors.NewValidationError("amount", errors.GetMessage(lang, errors.KeyInvalidAmountFormat))
+		return err
 	}
-	formattedAmount := fmt.Sprintf("%.2f", amountFloat)
 
 	// Generate expected signature
 	signatureData := fmt.Sprintf("%s%s%s%d%s",

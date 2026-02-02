@@ -42,3 +42,10 @@ func Format(amountStr string, lang i18n.Language) (string, error) {
 	}
 	return fmt.Sprintf("%.2f", amount), nil
 }
+
+// FormatFloat formats a float64 amount to exactly 2 decimal places string.
+//
+// This is used for signature generation where the amount is already a float64.
+func FormatFloat(amount float64) string {
+	return fmt.Sprintf("%.2f", amount)
+}

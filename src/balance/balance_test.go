@@ -46,7 +46,8 @@ func TestService_Get(t *testing.T) {
 		resp, err := svc.Get(t.Context())
 
 		require.NoError(t, err)
-		assert.Equal(t, "100000.00", resp)
+		assert.Equal(t, 100000.00, resp.Balance)
+		assert.Equal(t, 0.0, resp.UsdtBalance)
 	})
 
 	t.Run("handles API error", func(t *testing.T) {

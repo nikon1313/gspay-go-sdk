@@ -158,7 +158,10 @@ func (c *Client) executeWithRetry(ctx context.Context, method, fullURL string, r
 			// Exponential backoff with jitter to prevent thundering herd
 			baseWait := min(c.RetryWaitMin*time.Duration(1<<(attempt-1)), c.RetryWaitMax)
 			// Add up to 25% jitter
-			jitter := time.Duration(rand.Int64N(int64(baseWait / 4)))
+			var jitter time.Duration
+			if jitterMax := int64(baseWait / 4); jitterMax > 0 {
+				jitter = time.Duration(rand.Int64N(jitterMax))
+			}
 			waitTime := baseWait + jitter
 			select {
 			case <-ctx.Done():

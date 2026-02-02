@@ -37,17 +37,12 @@ type Service struct{ client *client.Client }
 func NewService(c *client.Client) *Service { return &Service{client: c} }
 
 // Get queries the operator's available settlement balance.
-func (s *Service) Get(ctx context.Context) (string, error) {
+func (s *Service) Get(ctx context.Context) (*Response, error) {
 	endpoint := fmt.Sprintf("/v2/integrations/operator/%s/get/balance", s.client.AuthKey)
 	resp, err := s.client.Get(ctx, endpoint, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	result, err := client.ParseData[Response](resp.Data, s.client.Language)
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%.2f", (*result).Balance), nil
+	return client.ParseData[Response](resp.Data, s.client.Language)
 }

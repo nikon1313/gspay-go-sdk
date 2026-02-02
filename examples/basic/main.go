@@ -132,7 +132,8 @@ func main() {
 	if err != nil {
 		log.Printf("Error: %v", err)
 	} else {
-		fmt.Printf("Balance: %s\n", balanceResp)
+		fmt.Printf("IDR Balance: %.2f\n", balanceResp.Balance)
+		fmt.Printf("USDT Balance: %.2f\n", balanceResp.UsdtBalance)
 	}
 
 	fmt.Println()

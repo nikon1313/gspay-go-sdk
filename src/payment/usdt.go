@@ -82,7 +82,7 @@ func NewUSDTService(c *client.Client) *USDTService {
 func (s *USDTService) Create(ctx context.Context, req *USDTRequest) (*USDTResponse, error) {
 	// Validate amount (minimum 1.00 USDT)
 	if req.Amount < constants.MinAmountUSDT {
-		return nil, errors.NewValidationError("amount", errors.GetMessage(errors.Language(s.client.Language), errors.KeyMinAmountUSDT))
+		return nil, errors.NewValidationError("amount", errors.GetMessage(s.client.Language, errors.KeyMinAmountUSDT))
 	}
 
 	// Format amount with 2 decimal places
@@ -131,16 +131,16 @@ func (s *USDTService) VerifySignature(cryptoPaymentID, amount, transactionID str
 
 	// Check required fields
 	if cryptoPaymentID == "" {
-		return errors.NewMissingFieldError(lang, "cryptopayment_id")
+		return errors.New(lang, errors.ErrMissingCallbackField, "cryptopayment_id")
 	}
 	if amount == "" {
-		return errors.NewMissingFieldError(lang, "amount")
+		return errors.New(lang, errors.ErrMissingCallbackField, "amount")
 	}
 	if transactionID == "" {
-		return errors.NewMissingFieldError(lang, "transaction_id")
+		return errors.New(lang, errors.ErrMissingCallbackField, "transaction_id")
 	}
 	if receivedSignature == "" {
-		return errors.NewMissingFieldError(lang, "signature")
+		return errors.New(lang, errors.ErrMissingCallbackField, "signature")
 	}
 
 	// Format amount with 2 decimal places
@@ -161,7 +161,7 @@ func (s *USDTService) VerifySignature(cryptoPaymentID, amount, transactionID str
 
 	// Constant-time comparison to prevent timing attacks
 	if !s.client.VerifySignature(expectedSignature, receivedSignature) {
-		return errors.NewInvalidSignatureError(lang)
+		return errors.New(lang, errors.ErrInvalidSignature)
 	}
 
 	return nil

@@ -103,7 +103,7 @@ import (
 Use the `src/errors` package. Support i18n where applicable.
 ```go
 // Sentinel error
-return nil, errors.ErrInvalidTransactionID
+return nil, errors.New(s.client.Language, errors.ErrInvalidTransactionID)
 
 // Validation error with i18n message
 return nil, errors.NewValidationError("amount", 

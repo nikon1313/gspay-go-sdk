@@ -129,12 +129,12 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 	// Validate transaction ID length
 	if len(req.TransactionID) < constants.MinTransactionIDLength ||
 		len(req.TransactionID) > constants.MaxTransactionIDLength {
-		return nil, errors.ErrInvalidTransactionID
+		return nil, errors.New(s.client.Language, errors.ErrInvalidTransactionID)
 	}
 
 	// Validate amount (minimum 10000 IDR)
 	if req.Amount < constants.MinAmountIDR {
-		return nil, errors.NewValidationError("amount", errors.GetMessage(errors.Language(s.client.Language), errors.KeyMinAmountIDR))
+		return nil, errors.NewValidationError("amount", errors.GetMessage(s.client.Language, errors.KeyMinAmountIDR))
 	}
 
 	// Generate signature: transaction_id + player_username + amount + secret_key
@@ -203,16 +203,16 @@ func (s *IDRService) VerifySignature(id, amount, transactionID string, status co
 
 	// Check required fields
 	if id == "" {
-		return errors.NewMissingFieldError(lang, "id")
+		return errors.New(lang, errors.ErrMissingCallbackField, "id")
 	}
 	if amount == "" {
-		return errors.NewMissingFieldError(lang, "amount")
+		return errors.New(lang, errors.ErrMissingCallbackField, "amount")
 	}
 	if transactionID == "" {
-		return errors.NewMissingFieldError(lang, "transaction_id")
+		return errors.New(lang, errors.ErrMissingCallbackField, "transaction_id")
 	}
 	if receivedSignature == "" {
-		return errors.NewMissingFieldError(lang, "signature")
+		return errors.New(lang, errors.ErrMissingCallbackField, "signature")
 	}
 
 	// Format amount with 2 decimal places
@@ -233,7 +233,7 @@ func (s *IDRService) VerifySignature(id, amount, transactionID string, status co
 
 	// Constant-time comparison to prevent timing attacks
 	if !s.client.VerifySignature(expectedSignature, receivedSignature) {
-		return errors.NewInvalidSignatureError(lang)
+		return errors.New(lang, errors.ErrInvalidSignature)
 	}
 
 	return nil

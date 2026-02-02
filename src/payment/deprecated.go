@@ -29,16 +29,16 @@ func (s *USDTService) verifyCallbackSignature(callback *USDTCallback) error {
 
 	// Check required fields
 	if callback.CryptoPaymentID == "" {
-		return errors.NewMissingFieldError(lang, "cryptopayment_id")
+		return errors.New(lang, errors.ErrMissingCallbackField, "cryptopayment_id")
 	}
 	if callback.Amount == "" {
-		return errors.NewMissingFieldError(lang, "amount")
+		return errors.New(lang, errors.ErrMissingCallbackField, "amount")
 	}
 	if callback.TransactionID == "" {
-		return errors.NewMissingFieldError(lang, "transaction_id")
+		return errors.New(lang, errors.ErrMissingCallbackField, "transaction_id")
 	}
 	if callback.Signature == "" {
-		return errors.NewMissingFieldError(lang, "signature")
+		return errors.New(lang, errors.ErrMissingCallbackField, "signature")
 	}
 
 	// Format amount with 2 decimal places
@@ -60,7 +60,7 @@ func (s *USDTService) verifyCallbackSignature(callback *USDTCallback) error {
 
 	// Constant-time comparison to prevent timing attacks
 	if !s.client.VerifySignature(expectedSignature, callback.Signature) {
-		return errors.NewInvalidSignatureError(lang)
+		return errors.New(lang, errors.ErrInvalidSignature)
 	}
 
 	return nil

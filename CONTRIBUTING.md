@@ -93,6 +93,7 @@ var defaultTimeout = 30 * time.Second // camelCase for internal variables
 ### Error Handling
 
 - Return typed errors from the `errors` package
+- Use `errors.New` for returning sentinel errors with context and localization
 - Use `fmt.Errorf` for wrapping: `return fmt.Errorf("%w: %s", errors.ErrInvalidAmount, amount)`
 - Include context in error messages
 

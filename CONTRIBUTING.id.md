@@ -91,6 +91,7 @@ var defaultTimeout = 30 * time.Second // camelCase untuk variabel internal
 ### Penanganan Error
 
 - Kembalikan error bertipe dari paket `errors`
+- Gunakan `errors.New` untuk mengembalikan error sentinel dengan konteks dan lokalisasi
 - Gunakan `fmt.Errorf` untuk wrapping: `return fmt.Errorf("%w: %s", errors.ErrInvalidAmount, amount)`
 - Sertakan konteks dalam pesan error
 

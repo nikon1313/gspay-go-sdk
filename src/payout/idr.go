@@ -139,12 +139,12 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 	// Validate bank code
 	bankCode := strings.ToUpper(req.BankCode)
 	if !constants.IsValidBankIDR(bankCode) {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInvalidBankCode, bankCode)
+		return nil, fmt.Errorf("%w: %s", errors.New(s.client.Language, errors.ErrInvalidBankCode), bankCode)
 	}
 
 	// Validate amount (minimum 10000 IDR)
 	if req.Amount < constants.MinAmountIDR {
-		return nil, errors.NewValidationError("amount", errors.GetMessage(errors.Language(s.client.Language), errors.KeyMinPayoutAmountIDR))
+		return nil, errors.NewValidationError("amount", errors.GetMessage(s.client.Language, errors.KeyMinPayoutAmountIDR))
 	}
 
 	// Generate signature: transaction_id + player_username + amount + account_number + secret_key
@@ -216,19 +216,19 @@ func (s *IDRService) VerifySignature(id, accountNumber, amount, transactionID, r
 
 	// Check required fields
 	if id == "" {
-		return errors.NewMissingFieldError(lang, "id")
+		return errors.New(lang, errors.ErrMissingCallbackField, "id")
 	}
 	if accountNumber == "" {
-		return errors.NewMissingFieldError(lang, "account_number")
+		return errors.New(lang, errors.ErrMissingCallbackField, "account_number")
 	}
 	if amount == "" {
-		return errors.NewMissingFieldError(lang, "amount")
+		return errors.New(lang, errors.ErrMissingCallbackField, "amount")
 	}
 	if transactionID == "" {
-		return errors.NewMissingFieldError(lang, "transaction_id")
+		return errors.New(lang, errors.ErrMissingCallbackField, "transaction_id")
 	}
 	if receivedSignature == "" {
-		return errors.NewMissingFieldError(lang, "signature")
+		return errors.New(lang, errors.ErrMissingCallbackField, "signature")
 	}
 
 	// Format amount with 2 decimal places
@@ -250,7 +250,7 @@ func (s *IDRService) VerifySignature(id, accountNumber, amount, transactionID, r
 
 	// Constant-time comparison to prevent timing attacks
 	if !s.client.VerifySignature(expectedSignature, receivedSignature) {
-		return errors.NewInvalidSignatureError(lang)
+		return errors.New(lang, errors.ErrInvalidSignature)
 	}
 
 	return nil

@@ -262,12 +262,12 @@ func (c *Client) VerifyCallbackIP(ipStr string) error {
 
 	// Validate IP format
 	if net.ParseIP(host) == nil {
-		return errors.ErrInvalidIPAddress
+		return errors.New(c.Language, errors.ErrInvalidIPAddress)
 	}
 
 	// Check whitelist
 	if !c.IsIPWhitelisted(ipStr) {
-		return errors.ErrIPNotWhitelisted
+		return errors.New(c.Language, errors.ErrIPNotWhitelisted)
 	}
 
 	return nil

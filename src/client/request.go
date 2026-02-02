@@ -51,7 +51,7 @@ func (c *Client) prepareRequestBody(body any) (io.Reader, gc.Buffer, func(), err
 	if err := json.NewEncoder(buf).Encode(body); err != nil {
 		buf.Reset()
 		gc.Default.Put(buf)
-		return nil, nil, func() {}, fmt.Errorf("%s: %w", i18n.Get(c.Language, i18n.MsgInvalidJSON), err)
+		return nil, nil, func() {}, errors.New(c.Language, errors.ErrInvalidJSON, err)
 	}
 
 	reqBody := bytes.NewReader(buf.Bytes())
@@ -67,7 +67,7 @@ func (c *Client) prepareRequestBody(body any) (io.Reader, gc.Buffer, func(), err
 func (c *Client) createHTTPRequest(ctx context.Context, method, fullURL string, reqBody io.Reader, hasBody bool) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, method, fullURL, reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", i18n.Get(c.Language, i18n.MsgRequestFailed), err)
+		return nil, errors.New(c.Language, errors.ErrRequestFailed, err)
 	}
 
 	req.Header.Set("Accept", "application/json")
@@ -88,7 +88,7 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 	if err != nil {
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, true, fmt.Errorf("%s: %w", i18n.Get(c.Language, i18n.MsgRequestFailed), err)
+		return nil, true, errors.New(c.Language, errors.ErrRequestFailed, err)
 	}
 
 	// Handle HTTP errors - retry on server errors (5xx) or 404
@@ -112,7 +112,7 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 	if respBuf.Len() == 0 {
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, true, errors.ErrEmptyResponse
+		return nil, true, errors.New(c.Language, errors.ErrEmptyResponse)
 	}
 
 	// Parse response
@@ -120,7 +120,7 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 	if err := json.Unmarshal(respBuf.Bytes(), &apiResp); err != nil {
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, false, fmt.Errorf("%w: %v", errors.ErrInvalidJSON, err)
+		return nil, false, errors.New(c.Language, errors.ErrInvalidJSON, err)
 	}
 
 	// Debug logging
@@ -173,7 +173,7 @@ func (c *Client) executeWithRetry(ctx context.Context, method, fullURL string, r
 
 		resp, err := c.HTTPClient.Do(req)
 		if err != nil {
-			lastErr = fmt.Errorf("%w: %v", errors.ErrRequestFailed, err)
+			lastErr = errors.New(c.Language, errors.ErrRequestFailed, err)
 			// Retry on transient network errors
 			if attempt < c.Retries {
 				continue
@@ -283,7 +283,7 @@ func ParseData[T any](data json.RawMessage, lang i18n.Language) (*T, error) {
 	// Try to unmarshal as single object
 	var result T
 	if err := json.Unmarshal(data, &result); err != nil {
-		return nil, fmt.Errorf("%s: %w", i18n.Get(lang, i18n.MsgInvalidJSON), err)
+		return nil, errors.New(lang, errors.ErrInvalidJSON, err)
 	}
 
 	return &result, nil

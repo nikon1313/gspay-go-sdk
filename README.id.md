@@ -14,7 +14,7 @@ SDK Go **tidak resmi** untuk API Payment Gateway GSPAY2. SDK ini menyediakan ant
 
 - **Pembayaran IDR**: Membuat pembayaran melalui QRIS, DANA, dan virtual account bank
 - **Pencairan IDR**: Memproses penarikan ke rekening bank dan e-wallet Indonesia
-- **Pembayaran USDT**: Menerima pembayaran cryptocurrency melalui jaringan TRC20
+- **Pembayaran USDT**: Menerima pembayaran cryptocurrency melalui jaringan TRC20 (Catatan: Tidak didukung untuk merchant Indonesia karena regulasi pemerintah)
 - **Pengecekan Saldo**: Memeriksa saldo settlement operator
 - **Verifikasi Callback**: Verifikasi tanda tangan yang aman untuk webhook
 - **Logika Retry**: Pengulangan otomatis dengan exponential backoff untuk kegagalan sementara
@@ -203,6 +203,8 @@ fmt.Printf("ID Pencairan: %s\n", resp.IDRPayoutID)
 ```
 
 ### Membuat Pembayaran USDT
+
+> **Catatan**: Pembayaran kripto saat ini tidak didukung untuk merchant Indonesia karena regulasi pemerintah.
 
 ```go
 import (

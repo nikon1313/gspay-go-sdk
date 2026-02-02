@@ -15,7 +15,7 @@ An **unofficial** Go SDK for the GSPAY2 Payment Gateway API. This SDK provides a
 
 - **IDR Payments**: Create payments via QRIS, DANA, and bank virtual accounts
 - **IDR Payouts**: Process withdrawals to Indonesian bank accounts and e-wallets
-- **USDT Payments**: Accept cryptocurrency payments via TRC20 network
+- **USDT Payments**: Accept cryptocurrency payments via TRC20 network (Note: Not supported for Indonesian merchants due to government regulations)
 - **Balance Queries**: Check operator settlement balance
 - **Callback Verification**: Secure signature verification for webhooks
 - **Retry Logic**: Automatic retries with exponential backoff for transient failures
@@ -204,6 +204,8 @@ fmt.Printf("Payout ID: %s\n", resp.IDRPayoutID)
 ```
 
 ### Create USDT Payment
+
+> **Note**: Crypto payments are currently not supported for Indonesian merchants due to government regulations.
 
 ```go
 import (

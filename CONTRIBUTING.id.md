@@ -52,6 +52,8 @@ gspay-go-sdk/
 │   ├── constants/   # Kode bank, status pembayaran, channel
 │   ├── errors/      # Tipe error dan penanganan
 │   ├── helper/      # Utilitas helper
+│   │   ├── amount/  # Utilitas pemformatan jumlah
+│   │   └── gc/      # Manajemen buffer pool
 │   ├── i18n/        # Internasionalisasi (bahasa, terjemahan)
 │   ├── internal/    # Utilitas internal (pembuatan tanda tangan)
 │   ├── payment/     # Layanan pembayaran (IDR, THB/MYR mendatang)

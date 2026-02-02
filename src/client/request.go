@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"time"
@@ -100,6 +101,9 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 		}
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
+		// Retry on 5xx server errors and 404s.
+		// Note: 404 is included because the GSPAY API may transiently return 404
+		// during service deployments or load balancer routing changes.
 		retry := (resp.StatusCode >= 500 || resp.StatusCode == 404)
 		return nil, retry, apiErr
 	}
@@ -151,8 +155,11 @@ func (c *Client) executeWithRetry(ctx context.Context, method, fullURL string, r
 	for attempt := 0; attempt <= c.Retries; attempt++ {
 		actualAttempts = attempt
 		if attempt > 0 {
-			// Exponential backoff
-			waitTime := min(c.RetryWaitMin*time.Duration(1<<(attempt-1)), c.RetryWaitMax)
+			// Exponential backoff with jitter to prevent thundering herd
+			baseWait := min(c.RetryWaitMin*time.Duration(1<<(attempt-1)), c.RetryWaitMax)
+			// Add up to 25% jitter
+			jitter := time.Duration(rand.Int64N(int64(baseWait / 4)))
+			waitTime := baseWait + jitter
 			select {
 			case <-ctx.Done():
 				return nil, ctx.Err()

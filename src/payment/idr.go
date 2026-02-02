@@ -19,11 +19,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/client"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/errors"
+	amountfmt "github.com/H0llyW00dzZ/gspay-go-sdk/src/helper/amount"
 )
 
 // IDRRequest represents a request to create an IDR payment.
@@ -216,7 +216,7 @@ func (s *IDRService) VerifySignature(id, amount, transactionID string, status co
 	}
 
 	// Format amount with 2 decimal places
-	formattedAmount, err := s.formatAmount(amount)
+	formattedAmount, err := amountfmt.Format(amount, s.client.Language)
 	if err != nil {
 		return err
 	}
@@ -253,15 +253,6 @@ func (s *IDRService) VerifyStatusSignature(status *IDRStatusResponse) error {
 		status.Status,
 		status.Signature,
 	)
-}
-
-// formatAmount formats an amount string to exactly 2 decimal places.
-func (s *IDRService) formatAmount(amountStr string) (string, error) {
-	amount, err := strconv.ParseFloat(amountStr, 64)
-	if err != nil {
-		return "", errors.NewValidationError("amount", errors.GetMessage(errors.Language(s.client.Language), errors.KeyInvalidAmountFormat))
-	}
-	return fmt.Sprintf("%.2f", amount), nil
 }
 
 // VerifyCallback verifies the signature of an IDR payment callback.

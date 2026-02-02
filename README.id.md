@@ -38,6 +38,9 @@ gspay-go-sdk/
 │   ├── payment/     # Layanan pembayaran (IDR, USDT)
 │   ├── payout/      # Layanan pencairan (IDR)
 │   ├── balance/     # Layanan pengecekan saldo
+│   ├── helper/      # Utilitas helper
+│   │   ├── amount/  # Utilitas pemformatan jumlah
+│   │   └── gc/      # Manajemen buffer pool
 │   └── internal/    # Utilitas internal (tanda tangan)
 └── examples/        # Contoh penggunaan
 ```

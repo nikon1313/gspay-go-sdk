@@ -39,6 +39,9 @@ gspay-go-sdk/
 │   ├── payment/     # Payment services (IDR, USDT)
 │   ├── payout/      # Payout services (IDR)
 │   ├── balance/     # Balance query service
+│   ├── helper/      # Helper utilities
+│   │   ├── amount/  # Amount formatting utilities
+│   │   └── gc/      # Buffer pool management
 │   └── internal/    # Internal utilities (signature)
 └── examples/        # Usage examples
 ```

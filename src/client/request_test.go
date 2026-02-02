@@ -270,6 +270,19 @@ func TestParseData(t *testing.T) {
 		assert.Equal(t, "https://pay.example.com", result.PaymentURL)
 	})
 
+	t.Run("parses array of strings data", func(t *testing.T) {
+		data := json.RawMessage(`["{\"payment_url\":\"https://pay.example.com\"}"]`)
+
+		type testStruct struct {
+			PaymentURL string `json:"payment_url"`
+		}
+
+		result, err := ParseData[testStruct](data, i18n.English)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Equal(t, "https://pay.example.com", result.PaymentURL)
+	})
+
 	t.Run("parses object data", func(t *testing.T) {
 		data := json.RawMessage(`{"payment_url":"https://pay.example.com"}`)
 

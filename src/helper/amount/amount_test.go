@@ -67,3 +67,23 @@ func TestFormat(t *testing.T) {
 		assert.Contains(t, err.Error(), "format jumlah tidak valid")
 	})
 }
+
+func TestFormatFloat(t *testing.T) {
+	t.Run("formats float to 2 decimal places", func(t *testing.T) {
+		tests := []struct {
+			input    float64
+			expected string
+		}{
+			{100.0, "100.00"},
+			{100.5, "100.50"},
+			{100.123, "100.12"},
+			{100.129, "100.13"}, // Rounding
+			{0.0, "0.00"},
+			{12345.6789, "12345.68"},
+		}
+
+		for _, tt := range tests {
+			assert.Equal(t, tt.expected, FormatFloat(tt.input))
+		}
+	})
+}

@@ -205,7 +205,6 @@ func (c *Client) waitBackoff(ctx context.Context, attempt int) error {
 	baseWait := min(c.RetryWaitMin*time.Duration(1<<(attempt-1)), c.RetryWaitMax)
 	// Add up to 25% jitter
 	var jitter time.Duration
-	// TODO: Do we need to use crypto/rand instead of math/rand?
 	if jitterMax := int64(baseWait / 4); jitterMax > 0 {
 		jitter = time.Duration(rand.Int64N(jitterMax))
 	}

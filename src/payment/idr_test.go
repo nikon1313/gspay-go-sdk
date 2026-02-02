@@ -103,6 +103,60 @@ func TestIDRService_Create(t *testing.T) {
 		require.NotNil(t, valErr)
 		assert.Equal(t, "amount", valErr.Field)
 	})
+
+	t.Run("handles API error response", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"code":    400,
+				"message": "invalid signature",
+			})
+		}))
+		defer server.Close()
+
+		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
+		svc := NewIDRService(c)
+
+		_, err := svc.Create(t.Context(), &IDRRequest{
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			Amount:        50000,
+		})
+
+		require.Error(t, err)
+		apiErr := errors.GetAPIError(err)
+		require.NotNil(t, apiErr)
+		assert.Equal(t, 400, apiErr.Code)
+		assert.Equal(t, "invalid signature", apiErr.Message)
+	})
+
+	t.Run("ignores invalid channel", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var req idrAPIRequest
+			json.NewDecoder(r.Body).Decode(&req)
+			assert.Empty(t, req.Channel, "channel should be empty")
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"code":    200,
+				"message": "success",
+				"data":    `{"idrpayment_id":"PAY123","transaction_id":"TXN123456789","amount":"50000","expire_date":"2026-01-26 15:00:00","status":"0","payment_url":"https://pay.example.com"}`,
+			})
+		}))
+		defer server.Close()
+
+		c := client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
+		svc := NewIDRService(c)
+
+		_, err := svc.Create(t.Context(), &IDRRequest{
+			TransactionID: "TXN123456789",
+			Username:      "user123",
+			Amount:        50000,
+			Channel:       "INVALID_CHANNEL",
+		})
+
+		require.NoError(t, err)
+	})
 }
 
 func TestIDRService_GetStatus(t *testing.T) {

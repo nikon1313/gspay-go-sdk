@@ -167,6 +167,54 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 	return &apiResp, false, nil
 }
 
+// performRequest executes a single HTTP request attempt.
+func (c *Client) performRequest(ctx context.Context, method, fullURL, endpoint string, reqBody io.Reader, hasBody bool, attempt int) (*Response, bool, error) {
+	req, err := c.createHTTPRequest(ctx, method, fullURL, reqBody, hasBody)
+	if err != nil {
+		return nil, false, err
+	}
+
+	// Log outgoing request
+	debugEndpoint := endpoint
+	if !c.Debug {
+		debugEndpoint = sanitize.Endpoint(endpoint)
+	}
+	c.logger.Debug("sending request",
+		"method", method,
+		"endpoint", debugEndpoint,
+		"attempt", attempt,
+	)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		// Log error (only when using custom logger, not debug mode)
+		if !c.Debug {
+			c.logger.Error("request failed",
+				"endpoint", sanitize.Endpoint(endpoint),
+				"attempt", attempt,
+				"error", err.Error(),
+			)
+		}
+		// Retry on transient network errors
+		return nil, true, errors.New(c.Language, errors.ErrRequestFailed, err)
+	}
+
+	apiResp, retry, err := c.processResponse(resp, endpoint)
+	if err != nil {
+		return nil, retry, err
+	}
+
+	// Log success (only when using custom logger, not debug mode)
+	if !c.Debug {
+		c.logger.Info("request completed successfully",
+			"endpoint", sanitize.Endpoint(endpoint),
+			"attempts", attempt+1,
+		)
+	}
+
+	return apiResp, false, nil
+}
+
 // executeWithRetry executes the HTTP request with retry logic.
 func (c *Client) executeWithRetry(ctx context.Context, method, fullURL string, reqBody io.Reader, reqBuf gc.Buffer, hasBody bool, endpoint string) (*Response, error) {
 	var lastErr error
@@ -194,65 +242,24 @@ func (c *Client) executeWithRetry(ctx context.Context, method, fullURL string, r
 			}
 		}
 
-		req, err := c.createHTTPRequest(ctx, method, fullURL, reqBody, hasBody)
-		if err != nil {
-			return nil, err
+		apiResp, retry, err := c.performRequest(ctx, method, fullURL, endpoint, reqBody, hasBody, attempt)
+		if err == nil {
+			return apiResp, nil
 		}
 
-		// Log outgoing request
-		debugEndpoint := endpoint
-		if !c.Debug {
-			debugEndpoint = sanitize.Endpoint(endpoint)
-		}
-		c.logger.Debug("sending request",
-			"method", method,
-			"endpoint", debugEndpoint,
-			"attempt", attempt,
-		)
-
-		resp, err := c.HTTPClient.Do(req)
-		if err != nil {
-			lastErr = errors.New(c.Language, errors.ErrRequestFailed, err)
-			// Log error (only when using custom logger, not debug mode)
+		lastErr = err
+		if retry && attempt < c.Retries {
+			// Log retryable error (only when using custom logger, not debug mode)
 			if !c.Debug {
-				c.logger.Error("request failed",
+				c.logger.Warn("retryable error occurred",
 					"endpoint", sanitize.Endpoint(endpoint),
 					"attempt", attempt,
 					"error", err.Error(),
 				)
 			}
-			// Retry on transient network errors
-			if attempt < c.Retries {
-				continue
-			}
-			break
+			continue
 		}
-
-		apiResp, retry, err := c.processResponse(resp, endpoint)
-		if err != nil {
-			lastErr = err
-			if retry && attempt < c.Retries {
-				// Log retryable error (only when using custom logger, not debug mode)
-				if !c.Debug {
-					c.logger.Warn("retryable error occurred",
-						"endpoint", sanitize.Endpoint(endpoint),
-						"attempt", attempt,
-						"error", err.Error(),
-					)
-				}
-				continue
-			}
-			break
-		}
-
-		// Log success (only when using custom logger, not debug mode)
-		if !c.Debug {
-			c.logger.Info("request completed successfully",
-				"endpoint", sanitize.Endpoint(endpoint),
-				"attempts", attempt+1,
-			)
-		}
-		return apiResp, nil
+		break
 	}
 
 	if lastErr != nil {

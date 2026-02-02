@@ -1,61 +1,67 @@
 # AGENTS.md - Guidelines for AI Coding Agents
 
-This document provides guidelines for AI agents working on the GSPAY Go SDK (Unofficial).
+This document provides comprehensive guidelines for AI agents working on the GSPAY Go SDK (Unofficial). Follow these instructions to maintain code quality, consistency, and correctness.
 
-## Build, Test, and Lint Commands
+## 1. Build, Test, and Lint Commands
+
+Execute these commands from the project root.
 
 ```bash
-# Build all packages
+# Build all packages to verify compilation
 go build ./...
 
-# Run all tests
+# Run all tests (standard)
 go test ./...
 
-# Run tests with verbose output
+# Run tests with verbose output (recommended for debugging)
 go test ./... -v
 
-# Run tests with coverage
+# Run tests with coverage analysis
 go test ./... -cover
 
-# Run a single test function
+# Run a single test function (e.g., TestIDRService_Create in payment package)
 go test ./src/payment -run TestIDRService_Create -v
 
-# Run a specific subtest
+# Run a specific subtest (e.g., "creates_payment_successfully")
 go test ./src/payment -run "TestIDRService_Create/creates_payment_successfully" -v
 
-# Run tests for a specific package
+# Run tests for a specific package only
 go test ./src/client/...
 
-# Static analysis
+# Static analysis (run before committing)
 go vet ./...
 
-# Format code
+# Format code (standard Go formatting)
 go fmt ./...
 
-# Tidy dependencies
+# Tidy dependencies (run after adding/removing imports)
 go mod tidy
 ```
 
-## Project Structure
+## 2. Project Structure
+
+Understand the layout before adding new files.
 
 ```
 src/
-├── client/      # HTTP client, options, helpers
-├── constants/   # Bank codes, channels, status codes
-├── errors/      # Sentinel errors, APIError, ValidationError, LocalizedError
-├── i18n/        # Internationalization (Language, MessageKey, translations)
-├── payment/     # IDR and USDT payment services
-├── payout/      # IDR payout service
 ├── balance/     # Balance query service
-├── helper/      # Helper utilities
-│   └── gc/      # Buffer pool management (bytebufferpool wrapper)
-└── internal/    # Internal packages (signature)
+├── client/      # HTTP client, request handling, retry logic (with jitter)
+├── constants/   # Enums (Banks, Channels, Status) and config constants
+├── errors/      # Sentinel errors, APIError, ValidationError, LocalizedError
+├── helper/      # Shared utility packages
+│   ├── amount/  # Amount formatting (2 decimal places, i18n support)
+│   └── gc/      # Garbage collection utilities (bytebufferpool wrapper)
+├── i18n/        # Internationalization (Language, MessageKey, translations)
+├── internal/    # Internal packages not exposed to users
+│   └── signature/ # MD5 signature generation and verification
+├── payment/     # Payment services (IDR, USDT)
+└── payout/      # Payout/Withdrawal services (IDR)
 ```
 
-## Code Style Guidelines
+## 3. Code Style & Conventions
 
-### License Header (Required on all .go files)
-
+### License Header
+**REQUIRED** at the top of every `.go` file:
 ```go
 // Copyright 2026 H0llyW00dzZ
 //
@@ -72,13 +78,8 @@ src/
 // limitations under the License.
 ```
 
-### Import Organization
-
-Group imports in this order with blank lines between groups:
-1. Standard library
-2. Project internal packages
-3. External dependencies
-
+### Imports
+Group imports: Standard Lib > Internal Project > External.
 ```go
 import (
     "context"
@@ -91,162 +92,89 @@ import (
 )
 ```
 
-### Naming Conventions
+### Naming & Types
+- **Packages**: Lowercase, single word (e.g., `payment`, `client`).
+- **Exported Types**: PascalCase (e.g., `IDRRequest`, `PaymentStatus`).
+- **Unexported Types**: camelCase (e.g., `idrAPIRequest`).
+- **Constants**: PascalCase.
+- **Errors**: Prefix with `Err` (e.g., `ErrInvalidAmount`).
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Packages | lowercase, single word | `client`, `payment`, `payout` |
-| Exported types | PascalCase | `PaymentStatus`, `IDRRequest` |
-| Unexported types | camelCase | `idrAPIRequest` |
-| Constants | PascalCase (exported) | `StatusSuccess`, `DefaultTimeout` |
-| Sentinel errors | `Err` prefix | `ErrInvalidAmount`, `ErrInvalidSignature` |
-| Constructors | `New` prefix | `NewIDRService`, `NewValidationError` |
-| Options | `With` prefix | `WithTimeout`, `WithRetries` |
-
-### Type Definitions
-
+### Error Handling
+Use the `src/errors` package. Support i18n where applicable.
 ```go
-// Exported request struct with JSON tags and doc comments
-type IDRRequest struct {
-    // TransactionID is a unique transaction ID (5-20 characters).
-    TransactionID string `json:"transaction_id"`
-    // Amount is the payment amount in IDR (no decimals).
-    Amount int64 `json:"amount"`
-}
+// Sentinel error
+return nil, errors.ErrInvalidTransactionID
 
-// Unexported internal API struct
-type idrAPIRequest struct {
-    TransactionID string `json:"transaction_id"`
-    Signature     string `json:"signature"`
-}
+// Validation error with i18n message
+return nil, errors.NewValidationError("amount", 
+    errors.GetMessage(s.client.Language, errors.KeyMinAmountIDR))
+
+// Wrapping API errors
+if apiErr := errors.GetAPIError(err); apiErr != nil { /* ... */ }
 ```
 
-### Service Pattern
+### Amount Formatting
+**ALWAYS** use `src/helper/amount` for formatting amounts in signatures/requests.
+```go
+import amountfmt "github.com/H0llyW00dzZ/gspay-go-sdk/src/helper/amount"
+
+// Format float64 for signature
+formatted := amountfmt.FormatFloat(req.Amount)
+```
+
+## 4. Service Pattern Implementation
+
+Follow this pattern for new services:
 
 ```go
-// Service struct
-type IDRService struct {
+type MyService struct {
     client *client.Client
 }
 
-// Constructor
-func NewIDRService(c *client.Client) *IDRService {
-    return &IDRService{client: c}
+func NewMyService(c *client.Client) *MyService {
+    return &MyService{client: c}
 }
 
-// Methods accept context.Context as first parameter
-func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse, error) {
-    // Implementation
-}
-```
-
-### Error Handling
-
-```go
-// Return sentinel errors for known conditions
-return nil, errors.ErrInvalidTransactionID
-
-// Return validation errors with field context
-return nil, errors.NewValidationError("amount", "minimum amount is 10000 IDR")
-
-// Wrap errors with context using fmt.Errorf
-return nil, fmt.Errorf("%w: %s", errors.ErrInvalidBankCode, bankCode)
-
-// Check errors using errors.Is or type extraction
-if apiErr := errors.GetAPIError(err); apiErr != nil {
-    // Handle API error
-}
-
-// Localized error messages
-return nil, errors.NewValidationError("amount", 
-    errors.GetMessage(s.client.Language, errors.KeyMinAmountIDR))
-```
-
-### Internationalization (i18n)
-
-```go
-import "github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
-
-// Client with Indonesian error messages
-c := client.New("auth", "secret", client.WithLanguage(i18n.Indonesian))
-
-// Get translated message
-msg := i18n.Get(i18n.Indonesian, i18n.MsgMinAmountIDR)
-// Result: "jumlah minimum adalah 10000 IDR"
-
-// Supported languages: i18n.English (default), i18n.Indonesian
-```
-
-### Functional Options Pattern
-
-```go
-type Option func(*Client)
-
-func WithTimeout(timeout time.Duration) Option {
-    return func(c *Client) {
-        if timeout >= 5*time.Second {
-            c.Timeout = timeout
-        }
-    }
+// Context as first arg. Request struct pointer as second.
+func (s *MyService) Create(ctx context.Context, req *MyRequest) (*MyResponse, error) {
+    // 1. Validate inputs (use constants)
+    // 2. Format data (e.g., amounts)
+    // 3. Generate signature (s.client.GenerateSignature)
+    // 4. Build internal API request struct
+    // 5. Execute request (s.client.Post/Get)
+    // 6. Parse response (client.ParseData)
 }
 ```
 
-## Testing Guidelines
+## 5. Testing Guidelines
 
-### Test Structure (table-driven with testify)
-
-```go
-func TestFunction(t *testing.T) {
-    t.Run("description of test case", func(t *testing.T) {
-        // Arrange
-        // Act
-        // Assert
-        assert.Equal(t, expected, actual)
-        require.NoError(t, err)
-    })
-}
-```
-
-### Mock HTTP Server Pattern
+Use `testify` for assertions and table-driven tests.
 
 ```go
-server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-    assert.Equal(t, http.MethodPost, r.Method)
+func TestService_Method(t *testing.T) {
+    // Setup mock server
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Assert request details
+        assert.Equal(t, "/expected/endpoint", r.URL.Path)
+        // Write mock response
+    }))
+    defer server.Close()
+
+    client := client.New("key", "secret", client.WithBaseURL(server.URL))
     
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(map[string]interface{}{
-        "code":    200,
-        "message": "success",
-        "data":    `{"payment_url":"https://example.com"}`,
+    t.Run("success case", func(t *testing.T) {
+        // Act & Assert
     })
-}))
-defer server.Close()
-
-c := client.New("auth", "secret", client.WithBaseURL(server.URL))
+}
 ```
 
-### Test Assertions
+## 6. API Signature Formulas
 
-- Use `require` for critical checks that should stop the test
-- Use `assert` for non-critical checks that can continue
-- Use `assert.ErrorIs` for sentinel error checking
-- Use `require.NotNil` before accessing pointer fields
+| Operation | Formula (MD5) |
+|-----------|---------------|
+| IDR Pay | `transaction_id + player_username + amount + secret_key` |
+| IDR Payout | `transaction_id + player_username + amount + account_number + secret_key` |
+| USDT Pay | `transaction_id + player_username + amount + secret_key` |
+| Callbacks | `... + status + secret_key` (Verify specific order in code) |
 
-## Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `github.com/stretchr/testify` | Test assertions (assert, require) |
-| `github.com/valyala/bytebufferpool` | Buffer pool for efficient memory reuse |
-
-## API Signature Formulas
-
-| Operation | Formula |
-|-----------|---------|
-| IDR Payment | `MD5(transaction_id + player_username + amount + secret_key)` |
-| IDR Payment Callback | `MD5(idrpayment_id + amount + transaction_id + status + secret_key)` |
-| IDR Payout | `MD5(transaction_id + player_username + amount + account_number + secret_key)` |
-| IDR Payout Callback | `MD5(idrpayout_id + account_number + amount + transaction_id + secret_key)` |
-| USDT Payment | `MD5(transaction_id + player_username + amount + secret_key)` |
-
-Note: Callback amounts have 2 decimal places (e.g., "10000.00").
+**Note**: Amounts in signatures must be formatted to 2 decimal places (e.g., "10000.00").

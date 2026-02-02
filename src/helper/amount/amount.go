@@ -37,7 +37,7 @@ import (
 func Format(amountStr string, lang i18n.Language) (string, error) {
 	amount, err := strconv.ParseFloat(amountStr, 64)
 	if err != nil {
-		return "", errors.NewValidationError("amount",
+		return "", errors.NewValidationError(errors.Language(lang), "amount",
 			errors.GetMessage(errors.Language(lang), errors.KeyInvalidAmountFormat))
 	}
 	return fmt.Sprintf("%.2f", amount), nil

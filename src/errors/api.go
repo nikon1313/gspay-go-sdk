@@ -18,6 +18,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
 )
 
 // APIError represents an error returned by the GSPAY2 API.
@@ -30,15 +32,19 @@ type APIError struct {
 	Endpoint string `json:"-"`
 	// RawResponse contains the raw response body for debugging.
 	RawResponse string `json:"-"`
+	// Lang is the language for error messages.
+	Lang i18n.Language `json:"-"`
 }
 
 // Error implements the error interface.
 func (e *APIError) Error() string {
 	if e.Endpoint != "" {
 		sanitizedEndpoint := sanitizeEndpoint(e.Endpoint)
-		return fmt.Sprintf("gspay: API error %d on %s: %s", e.Code, sanitizedEndpoint, e.Message)
+		format := i18n.Get(e.Lang, i18n.MsgAPIErrorFormat)
+		return fmt.Sprintf(format, e.Code, sanitizedEndpoint, e.Message)
 	}
-	return fmt.Sprintf("gspay: API error %d: %s", e.Code, e.Message)
+	format := i18n.Get(e.Lang, i18n.MsgAPIErrorFormatNoURL)
+	return fmt.Sprintf(format, e.Code, e.Message)
 }
 
 // sanitizeEndpoint redacts sensitive information like auth keys from endpoint URLs.

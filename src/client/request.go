@@ -98,6 +98,7 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 			Message:     fmt.Sprintf("HTTP Error: %d", resp.StatusCode),
 			Endpoint:    endpoint,
 			RawResponse: string(respBuf.Bytes()),
+			Lang:        c.Language,
 		}
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
@@ -135,6 +136,7 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 			Message:     apiResp.Message,
 			Endpoint:    endpoint,
 			RawResponse: string(respBuf.Bytes()),
+			Lang:        c.Language,
 		}
 		respBuf.Reset()
 		gc.Default.Put(respBuf)

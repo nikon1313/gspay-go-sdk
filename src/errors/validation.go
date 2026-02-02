@@ -17,22 +17,26 @@ package errors
 import (
 	"errors"
 	"fmt"
+
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
 )
 
 // ValidationError represents a validation error for request parameters.
 type ValidationError struct {
 	Field   string
 	Message string
+	Lang    i18n.Language
 }
 
 // Error implements the error interface.
 func (e *ValidationError) Error() string {
-	return fmt.Sprintf("gspay: validation error for %s: %s", e.Field, e.Message)
+	format := i18n.Get(e.Lang, i18n.MsgValidationErrorFormat)
+	return fmt.Sprintf(format, e.Field, e.Message)
 }
 
 // NewValidationError creates a new ValidationError.
-func NewValidationError(field, message string) *ValidationError {
-	return &ValidationError{Field: field, Message: message}
+func NewValidationError(lang i18n.Language, field, message string) *ValidationError {
+	return &ValidationError{Field: field, Message: message, Lang: lang}
 }
 
 // IsValidationError checks if an error is a ValidationError.

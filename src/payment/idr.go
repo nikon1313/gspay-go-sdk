@@ -134,7 +134,7 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 
 	// Validate amount (minimum 10000 IDR)
 	if req.Amount < constants.MinAmountIDR {
-		return nil, errors.NewValidationError("amount", errors.GetMessage(s.client.Language, errors.KeyMinAmountIDR))
+		return nil, errors.NewValidationError(s.client.Language, "amount", errors.GetMessage(s.client.Language, errors.KeyMinAmountIDR))
 	}
 
 	// Generate signature: transaction_id + player_username + amount + secret_key

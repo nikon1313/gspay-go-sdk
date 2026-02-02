@@ -44,7 +44,7 @@ func (s *USDTService) verifyCallbackSignature(callback *USDTCallback) error {
 	// Format amount with 2 decimal places
 	amount, err := strconv.ParseFloat(callback.Amount, 64)
 	if err != nil {
-		return errors.NewValidationError("amount", errors.GetMessage(lang, errors.KeyInvalidAmountFormat))
+		return errors.NewValidationError(lang, "amount", errors.GetMessage(lang, errors.KeyInvalidAmountFormat))
 	}
 	formattedAmount := fmt.Sprintf("%.2f", amount)
 

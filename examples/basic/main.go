@@ -26,6 +26,7 @@ import (
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/client"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/errors"
+	"github.com/H0llyW00dzZ/gspay-go-sdk/src/i18n"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/payment"
 )
 
@@ -44,6 +45,7 @@ func main() {
 		secretKey,
 		client.WithTimeout(60*time.Second),
 		client.WithRetries(3),
+		client.WithLanguage(i18n.Indonesian),
 	)
 
 	ctx := context.Background()

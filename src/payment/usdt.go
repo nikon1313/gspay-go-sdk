@@ -82,7 +82,7 @@ func NewUSDTService(c *client.Client) *USDTService {
 func (s *USDTService) Create(ctx context.Context, req *USDTRequest) (*USDTResponse, error) {
 	// Validate amount (minimum 1.00 USDT)
 	if req.Amount < constants.MinAmountUSDT {
-		return nil, errors.NewValidationError("amount", errors.GetMessage(s.client.Language, errors.KeyMinAmountUSDT))
+		return nil, errors.NewValidationError(s.client.Language, "amount", errors.GetMessage(s.client.Language, errors.KeyMinAmountUSDT))
 	}
 
 	// Format amount with 2 decimal places

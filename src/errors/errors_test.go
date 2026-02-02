@@ -89,6 +89,7 @@ func TestAPIError_Error(t *testing.T) {
 		err := &APIError{
 			Code:    400,
 			Message: "bad request",
+			Lang:    i18n.English,
 		}
 		expected := "gspay: API error 400: bad request"
 		assert.Equal(t, expected, err.Error())
@@ -99,8 +100,20 @@ func TestAPIError_Error(t *testing.T) {
 			Code:     500,
 			Message:  "internal server error",
 			Endpoint: "/api/test",
+			Lang:     i18n.English,
 		}
 		expected := "gspay: API error 500 on /api/test: internal server error"
+		assert.Equal(t, expected, err.Error())
+	})
+
+	t.Run("formats localized error with endpoint (Indonesian)", func(t *testing.T) {
+		err := &APIError{
+			Code:     500,
+			Message:  "internal server error",
+			Endpoint: "/api/test",
+			Lang:     i18n.Indonesian,
+		}
+		expected := "gspay: kesalahan API 500 pada /api/test: internal server error"
 		assert.Equal(t, expected, err.Error())
 	})
 
@@ -109,6 +122,7 @@ func TestAPIError_Error(t *testing.T) {
 			Code:     401,
 			Message:  "unauthorized",
 			Endpoint: "/v2/integrations/operators/secretkey123/idr/payment",
+			Lang:     i18n.English,
 		}
 		expected := "gspay: API error 401 on /v2/integrations/operators/[REDACTED]/idr/payment: unauthorized"
 		assert.Equal(t, expected, err.Error())
@@ -119,6 +133,7 @@ func TestAPIError_Error(t *testing.T) {
 			Code:     400,
 			Message:  "insufficient balance",
 			Endpoint: "/v2/integrations/operators/98f3ca376dc94481b0f0fc38825f76e4/idr/payout",
+			Lang:     i18n.English,
 		}
 		expected := "gspay: API error 400 on /v2/integrations/operators/[REDACTED]/idr/payout: insufficient balance"
 		assert.Equal(t, expected, err.Error())
@@ -129,6 +144,7 @@ func TestAPIError_Error(t *testing.T) {
 			Code:     404,
 			Message:  "payout not found",
 			Endpoint: "/v2/integrations/operators/98f3ca376dc94481b0f0fc38825f76e4/idr/payout/status",
+			Lang:     i18n.English,
 		}
 		expected := "gspay: API error 404 on /v2/integrations/operators/[REDACTED]/idr/payout/status: payout not found"
 		assert.Equal(t, expected, err.Error())
@@ -139,6 +155,7 @@ func TestAPIError_Error(t *testing.T) {
 			Code:     400,
 			Message:  "IP Network Unauthorized",
 			Endpoint: "/v2/integrations/operator/98f3ca376dc94481b0f0fc38825f76e4/get/balance",
+			Lang:     i18n.English,
 		}
 		expected := "gspay: API error 400 on /v2/integrations/operator/[REDACTED]/get/balance: IP Network Unauthorized"
 		assert.Equal(t, expected, err.Error())
@@ -149,6 +166,7 @@ func TestAPIError_Error(t *testing.T) {
 			Code:     400,
 			Message:  "IP Network Unauthorized",
 			Endpoint: "/v2/integrations/operators/98f3ca376dc94481b0f0fc38825f76e4/cryptocurrency/trc20/usdt",
+			Lang:     i18n.English,
 		}
 		expected := "gspay: API error 400 on /v2/integrations/operators/[REDACTED]/cryptocurrency/trc20/usdt: IP Network Unauthorized"
 		assert.Equal(t, expected, err.Error())
@@ -185,18 +203,32 @@ func TestGetAPIError(t *testing.T) {
 }
 
 func TestValidationError_Error(t *testing.T) {
-	err := &ValidationError{
-		Field:   "amount",
-		Message: "must be positive",
-	}
-	expected := "gspay: validation error for amount: must be positive"
-	assert.Equal(t, expected, err.Error())
+	t.Run("formats English error", func(t *testing.T) {
+		err := &ValidationError{
+			Field:   "amount",
+			Message: "must be positive",
+			Lang:    i18n.English,
+		}
+		expected := "gspay: validation error for amount: must be positive"
+		assert.Equal(t, expected, err.Error())
+	})
+
+	t.Run("formats Indonesian error", func(t *testing.T) {
+		err := &ValidationError{
+			Field:   "amount",
+			Message: "jumlah minimum adalah 10000 IDR",
+			Lang:    i18n.Indonesian,
+		}
+		expected := "gspay: kesalahan validasi untuk amount: jumlah minimum adalah 10000 IDR"
+		assert.Equal(t, expected, err.Error())
+	})
 }
 
 func TestNewValidationError(t *testing.T) {
-	err := NewValidationError("bank_code", "invalid code")
+	err := NewValidationError(i18n.English, "bank_code", "invalid code")
 	assert.Equal(t, "bank_code", err.Field)
 	assert.Equal(t, "invalid code", err.Message)
+	assert.Equal(t, i18n.English, err.Lang)
 }
 
 func TestIsValidationError(t *testing.T) {

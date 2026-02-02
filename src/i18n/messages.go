@@ -32,10 +32,13 @@ const (
 	MsgInvalidIPAddress     MessageKey = "invalid_ip_address"
 
 	// Validation error messages.
-	MsgMinAmountIDR        MessageKey = "min_amount_idr"
-	MsgMinAmountUSDT       MessageKey = "min_amount_usdt"
-	MsgMinPayoutAmountIDR  MessageKey = "min_payout_amount_idr"
-	MsgInvalidAmountFormat MessageKey = "invalid_amount_format"
+	MsgMinAmountIDR          MessageKey = "min_amount_idr"
+	MsgMinAmountUSDT         MessageKey = "min_amount_usdt"
+	MsgMinPayoutAmountIDR    MessageKey = "min_payout_amount_idr"
+	MsgInvalidAmountFormat   MessageKey = "invalid_amount_format"
+	MsgValidationErrorFormat MessageKey = "validation_error_format"
+	MsgAPIErrorFormat        MessageKey = "api_error_format"
+	MsgAPIErrorFormatNoURL   MessageKey = "api_error_format_no_url"
 
 	// Request retry messages.
 	MsgRequestFailedAfterRetries MessageKey = "request_failed_after_retries"
@@ -57,10 +60,13 @@ var translations = map[Language]map[MessageKey]string{
 		MsgInvalidIPAddress:     "invalid IP address format",
 
 		// Validation errors
-		MsgMinAmountIDR:        "minimum amount is 10000 IDR",
-		MsgMinAmountUSDT:       "minimum amount is 1.00 USDT",
-		MsgMinPayoutAmountIDR:  "minimum payout amount is 10000 IDR",
-		MsgInvalidAmountFormat: "invalid amount format",
+		MsgMinAmountIDR:          "minimum amount is 10000 IDR",
+		MsgMinAmountUSDT:         "minimum amount is 1.00 USDT",
+		MsgMinPayoutAmountIDR:    "minimum payout amount is 10000 IDR",
+		MsgInvalidAmountFormat:   "invalid amount format",
+		MsgValidationErrorFormat: "gspay: validation error for %s: %s",
+		MsgAPIErrorFormat:        "gspay: API error %d on %s: %s",
+		MsgAPIErrorFormatNoURL:   "gspay: API error %d: %s",
 
 		// Request retry messages
 		MsgRequestFailedAfterRetries: "request failed after %d retries",
@@ -79,10 +85,13 @@ var translations = map[Language]map[MessageKey]string{
 		MsgInvalidIPAddress:     "format alamat IP tidak valid",
 
 		// Validation errors
-		MsgMinAmountIDR:        "jumlah minimum adalah 10000 IDR",
-		MsgMinAmountUSDT:       "jumlah minimum adalah 1.00 USDT",
-		MsgMinPayoutAmountIDR:  "jumlah pembayaran minimum adalah 10000 IDR",
-		MsgInvalidAmountFormat: "format jumlah tidak valid",
+		MsgMinAmountIDR:          "jumlah minimum adalah 10000 IDR",
+		MsgMinAmountUSDT:         "jumlah minimum adalah 1.00 USDT",
+		MsgMinPayoutAmountIDR:    "jumlah pembayaran minimum adalah 10000 IDR",
+		MsgInvalidAmountFormat:   "format jumlah tidak valid",
+		MsgValidationErrorFormat: "gspay: kesalahan validasi untuk %s: %s",
+		MsgAPIErrorFormat:        "gspay: kesalahan API %d pada %s: %s",
+		MsgAPIErrorFormatNoURL:   "gspay: kesalahan API %d: %s",
 
 		// Request retry messages
 		MsgRequestFailedAfterRetries: "permintaan gagal setelah %d percobaan",

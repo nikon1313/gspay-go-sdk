@@ -27,7 +27,7 @@ const (
 	// This should be updated with each release.
 	//
 	// Note: the versioning its based of heap like unix time.
-	SDKVersion = "0.3.9"
+	SDKVersion = "0.4.0"
 
 	// SDKRepository is the GitHub repository URL for this SDK.
 	SDKRepository = "https://github.com/H0llyW00dzZ/gspay-go-sdk"

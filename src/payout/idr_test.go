@@ -16,6 +16,7 @@ package payout
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -147,6 +148,61 @@ func TestIDRService_Create(t *testing.T) {
 		valErr := errors.GetValidationError(err)
 		require.NotNil(t, valErr)
 		assert.Equal(t, "amount", valErr.Field)
+	})
+
+	t.Run("validates transaction ID length", func(t *testing.T) {
+		c := client.New("auth-key", "secret-key")
+		svc := NewIDRService(c)
+
+		// Too short (less than 5 characters)
+		_, err := svc.Create(t.Context(), &IDRRequest{
+			TransactionID: "TXN",
+			Username:      "user123",
+			AccountName:   "John Doe",
+			AccountNumber: "1234567890",
+			Amount:        50000,
+			BankCode:      "BCA",
+		})
+
+		require.Error(t, err)
+		assert.True(t, stderrors.Is(err, errors.ErrInvalidTransactionID))
+
+		// Too long (more than 20 characters)
+		_, err = svc.Create(t.Context(), &IDRRequest{
+			TransactionID: "TXN12345678901234567890",
+			Username:      "user123",
+			AccountName:   "John Doe",
+			AccountNumber: "1234567890",
+			Amount:        50000,
+			BankCode:      "BCA",
+		})
+
+		require.Error(t, err)
+		assert.True(t, stderrors.Is(err, errors.ErrInvalidTransactionID))
+
+		// Boundary: exactly 5 characters (minimum valid)
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"code":    200,
+				"message": "success",
+				"data":    `{"idrpayout_id":123,"status":0}`,
+			})
+		}))
+		defer server.Close()
+
+		c = client.New("auth-key", "secret-key", client.WithBaseURL(server.URL))
+		svc = NewIDRService(c)
+
+		_, err = svc.Create(t.Context(), &IDRRequest{
+			TransactionID: "TXN12", // exactly 5 characters
+			Username:      "user123",
+			AccountName:   "John Doe",
+			AccountNumber: "1234567890",
+			Amount:        50000,
+			BankCode:      "BCA",
+		})
+		require.NoError(t, err)
 	})
 
 	t.Run("normalizes bank code to uppercase", func(t *testing.T) {

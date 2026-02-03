@@ -145,6 +145,12 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 		"accountNumber", s.client.LogAccountNumber(req.AccountNumber),
 	)
 
+	// Validate transaction ID length
+	if len(req.TransactionID) < constants.MinTransactionIDLength ||
+		len(req.TransactionID) > constants.MaxTransactionIDLength {
+		return nil, s.client.Error(errors.ErrInvalidTransactionID)
+	}
+
 	// Validate bank code
 	bankCode := strings.ToUpper(req.BankCode)
 	if !constants.IsValidBankIDR(bankCode) {

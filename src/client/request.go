@@ -151,9 +151,10 @@ func (c *Client) createHTTPRequest(ctx context.Context, method, fullURL string, 
 
 // processResponse processes the HTTP response and returns parsed data or error.
 func (c *Client) processResponse(resp *http.Response, endpoint string) responseResult {
+	defer resp.Body.Close()
+
 	respBuf := gc.Default.Get()
 	_, err := respBuf.ReadFrom(resp.Body)
-	resp.Body.Close()
 
 	if err != nil {
 		respBuf.Reset()

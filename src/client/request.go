@@ -23,6 +23,7 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
@@ -75,6 +76,41 @@ func (c *Client) LogAccountName(accountName string) string {
 	return sanitize.AccountName(accountName)
 }
 
+// parseRetryAfter parses the Retry-After header value and returns the suggested wait duration.
+// It supports both seconds format (e.g., "120") and HTTP-date format (e.g., "Wed, 21 Oct 2025 07:28:00 GMT").
+// Returns 0 if the header is empty or cannot be parsed.
+func parseRetryAfter(value string) time.Duration {
+	if value == "" {
+		return 0
+	}
+
+	// Try parsing as seconds (most common)
+	if seconds, err := strconv.ParseInt(value, 10, 64); err == nil {
+		if seconds > 0 {
+			return time.Duration(seconds) * time.Second
+		}
+		return 0
+	}
+
+	// Try parsing as HTTP-date (RFC 1123 format)
+	if t, err := time.Parse(time.RFC1123, value); err == nil {
+		duration := time.Until(t)
+		if duration > 0 {
+			return duration
+		}
+	}
+
+	return 0
+}
+
+// responseResult holds the result of processing an HTTP response.
+type responseResult struct {
+	Response   *Response
+	Retry      bool
+	RetryAfter time.Duration // Server-suggested wait time from Retry-After header (0 means use manual backoff)
+	Err        error
+}
+
 // prepareRequestBody prepares the request body for HTTP requests.
 func (c *Client) prepareRequestBody(body any) (io.Reader, gc.Buffer, func(), error) {
 	if body == nil {
@@ -114,7 +150,7 @@ func (c *Client) createHTTPRequest(ctx context.Context, method, fullURL string, 
 }
 
 // processResponse processes the HTTP response and returns parsed data or error.
-func (c *Client) processResponse(resp *http.Response, endpoint string) (*Response, bool, error) {
+func (c *Client) processResponse(resp *http.Response, endpoint string) responseResult {
 	respBuf := gc.Default.Get()
 	_, err := respBuf.ReadFrom(resp.Body)
 	resp.Body.Close()
@@ -122,7 +158,7 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 	if err != nil {
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, true, errors.New(c.Language, errors.ErrRequestFailed, err)
+		return responseResult{Retry: true, Err: errors.New(c.Language, errors.ErrRequestFailed, err)}
 	}
 
 	// Handle HTTP errors - retry on server errors (5xx), 404, or 429
@@ -150,19 +186,24 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
 
-		// Return specific error for rate limiting
+		// Return specific error for rate limiting with Retry-After support
 		if resp.StatusCode == 429 {
-			return nil, retry, errors.New(c.Language, errors.ErrRateLimited)
+			retryAfter := parseRetryAfter(resp.Header.Get("Retry-After"))
+			return responseResult{
+				Retry:      retry,
+				RetryAfter: retryAfter,
+				Err:        errors.New(c.Language, errors.ErrRateLimited),
+			}
 		}
 
-		return nil, retry, apiErr
+		return responseResult{Retry: retry, Err: apiErr}
 	}
 
 	// Handle empty response
 	if respBuf.Len() == 0 {
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, true, errors.New(c.Language, errors.ErrEmptyResponse)
+		return responseResult{Retry: true, Err: errors.New(c.Language, errors.ErrEmptyResponse)}
 	}
 
 	// Parse response
@@ -170,7 +211,7 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 	if err := json.Unmarshal(respBuf.Bytes(), &apiResp); err != nil {
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, false, errors.New(c.Language, errors.ErrInvalidJSON, err)
+		return responseResult{Err: errors.New(c.Language, errors.ErrInvalidJSON, err)}
 	}
 
 	// Debug logging
@@ -191,14 +232,14 @@ func (c *Client) processResponse(resp *http.Response, endpoint string) (*Respons
 		}
 		respBuf.Reset()
 		gc.Default.Put(respBuf)
-		return nil, false, apiErr
+		return responseResult{Err: apiErr}
 	}
 
 	// Clean up buffer
 	respBuf.Reset()
 	gc.Default.Put(respBuf)
 
-	return &apiResp, false, nil
+	return responseResult{Response: &apiResp}
 }
 
 // requestParams holds the parameters for a single request attempt.
@@ -219,10 +260,10 @@ type retryParams struct {
 }
 
 // performRequest executes a single HTTP request attempt.
-func (c *Client) performRequest(ctx context.Context, params requestParams) (*Response, bool, error) {
+func (c *Client) performRequest(ctx context.Context, params requestParams) responseResult {
 	req, err := c.createHTTPRequest(ctx, params.Method, params.FullURL, params.Body, params.HasBody)
 	if err != nil {
-		return nil, false, err
+		return responseResult{Err: err}
 	}
 
 	// Log outgoing request
@@ -241,12 +282,12 @@ func (c *Client) performRequest(ctx context.Context, params requestParams) (*Res
 			"error", err.Error(),
 		)
 		// Retry on transient network errors
-		return nil, true, errors.New(c.Language, errors.ErrRequestFailed, err)
+		return responseResult{Retry: true, Err: errors.New(c.Language, errors.ErrRequestFailed, err)}
 	}
 
-	apiResp, retry, err := c.processResponse(resp, params.Endpoint)
-	if err != nil {
-		return nil, retry, err
+	result := c.processResponse(resp, params.Endpoint)
+	if result.Err != nil {
+		return result
 	}
 
 	// Log success
@@ -255,13 +296,15 @@ func (c *Client) performRequest(ctx context.Context, params requestParams) (*Res
 		"attempts", params.Attempt+1,
 	)
 
-	return apiResp, false, nil
+	return result
 }
 
 // executeWithRetry executes the HTTP request with retry logic.
 func (c *Client) executeWithRetry(ctx context.Context, params retryParams) (*Response, error) {
 	var lastErr error
 	var actualAttempts int
+	var suggestedWait time.Duration // Server-suggested wait time from Retry-After header
+
 	for attempt := 0; attempt <= c.Retries; attempt++ {
 		actualAttempts = attempt
 		if attempt > 0 {
@@ -272,10 +315,13 @@ func (c *Client) executeWithRetry(ctx context.Context, params retryParams) (*Res
 				"maxRetries", c.Retries,
 			)
 
-			// Wait with exponential backoff and jitter
-			if err := c.waitBackoff(ctx, attempt); err != nil {
+			// Wait with server-suggested time or fallback to exponential backoff with jitter
+			if err := c.waitBackoff(ctx, attempt, suggestedWait); err != nil {
 				return nil, err
 			}
+
+			// Reset suggested wait for next iteration
+			suggestedWait = 0
 
 			// Reset body reader for retry
 			if params.HasBody {
@@ -285,40 +331,60 @@ func (c *Client) executeWithRetry(ctx context.Context, params retryParams) (*Res
 
 		// Update attempt number and call performRequest
 		params.Attempt = attempt
-		apiResp, retry, err := c.performRequest(ctx, params.requestParams)
-		if err == nil {
-			return apiResp, nil
+		result := c.performRequest(ctx, params.requestParams)
+		if result.Err == nil {
+			return result.Response, nil
 		}
 
-		lastErr = err
-		if retry && attempt < c.Retries {
-			// Log retryable error
-			c.logger.Warn(c.I18n(i18n.LogRetryableError),
-				"endpoint", c.LogEndpoint(params.Endpoint),
-				"attempt", attempt,
-				"error", err.Error(),
-			)
+		lastErr = result.Err
+		suggestedWait = result.RetryAfter
+
+		if result.Retry && attempt < c.Retries {
+			// Log retryable error with rate limit info if applicable
+			if suggestedWait > 0 {
+				c.logger.Warn(c.I18n(i18n.LogRateLimitedRetry),
+					"endpoint", c.LogEndpoint(params.Endpoint),
+					"attempt", attempt,
+					"retryAfter", suggestedWait.String(),
+				)
+			} else {
+				c.logger.Warn(c.I18n(i18n.LogRetryableError),
+					"endpoint", c.LogEndpoint(params.Endpoint),
+					"attempt", attempt,
+					"error", result.Err.Error(),
+				)
+			}
 			continue
 		}
 		break
 	}
 
 	// lastErr is always non-nil here because:
-	// 1. The loop only exits via break when err != nil (line 296)
-	// 2. Successful requests return early (line 283)
+	// 1. The loop only exits via break when err != nil
+	// 2. Successful requests return early
 	return nil, fmt.Errorf(c.I18n(i18n.MsgRequestFailedAfterRetries)+": %w", actualAttempts, lastErr)
 }
 
-// waitBackoff calculates the backoff duration and waits.
-func (c *Client) waitBackoff(ctx context.Context, attempt int) error {
-	// Exponential backoff with jitter to prevent thundering herd
-	baseWait := min(c.RetryWaitMin*time.Duration(1<<(attempt-1)), c.RetryWaitMax)
-	// Add up to 25% jitter
-	var jitter time.Duration
-	if jitterMax := int64(baseWait / 4); jitterMax > 0 {
-		jitter = time.Duration(rand.Int64N(jitterMax))
+// waitBackoff waits before retrying a request.
+// If suggestedWait is provided (> 0), it uses the server-suggested Retry-After duration.
+// Otherwise, it falls back to exponential backoff with jitter to prevent thundering herd.
+func (c *Client) waitBackoff(ctx context.Context, attempt int, suggestedWait time.Duration) error {
+	var waitTime time.Duration
+
+	if suggestedWait > 0 {
+		// Use server-suggested wait time (from Retry-After header)
+		// Cap at RetryWaitMax to prevent excessively long waits
+		waitTime = min(suggestedWait, c.RetryWaitMax)
+	} else {
+		// Fallback to manual exponential backoff with jitter
+		baseWait := min(c.RetryWaitMin*time.Duration(1<<(attempt-1)), c.RetryWaitMax)
+		// Add up to 25% jitter
+		var jitter time.Duration
+		if jitterMax := int64(baseWait / 4); jitterMax > 0 {
+			jitter = time.Duration(rand.Int64N(jitterMax))
+		}
+		waitTime = baseWait + jitter
 	}
-	waitTime := baseWait + jitter
 
 	select {
 	case <-ctx.Done():

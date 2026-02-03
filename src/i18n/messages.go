@@ -98,6 +98,7 @@ const (
 	LogRequestCompleted    MessageKey = "log_request_completed"
 	LogRetryingRequest     MessageKey = "log_retrying_request"
 	LogRetryableError      MessageKey = "log_retryable_error"
+	LogRateLimitedRetry    MessageKey = "log_rate_limited_retry"
 
 	// HTTP Error message (for APIError.Message field).
 	MsgHTTPError MessageKey = "http_error"
@@ -185,6 +186,7 @@ var translations = map[Language]map[MessageKey]string{
 		LogRequestCompleted:    "request completed successfully",
 		LogRetryingRequest:     "retrying request",
 		LogRetryableError:      "retryable error occurred",
+		LogRateLimitedRetry:    "rate limited, waiting before retry",
 
 		// HTTP Error message
 		MsgHTTPError: "HTTP Error: %d",
@@ -269,6 +271,7 @@ var translations = map[Language]map[MessageKey]string{
 		LogRequestCompleted:    "permintaan berhasil diselesaikan",
 		LogRetryingRequest:     "mencoba ulang permintaan",
 		LogRetryableError:      "terjadi error yang dapat dicoba ulang",
+		LogRateLimitedRetry:    "dibatasi rate limit, menunggu sebelum mencoba ulang",
 
 		// HTTP Error message
 		MsgHTTPError: "Error HTTP: %d",

@@ -318,3 +318,187 @@ func TestResponse_IsSuccess(t *testing.T) {
 		}
 	})
 }
+
+func TestParseRetryAfter(t *testing.T) {
+	t.Run("parses seconds format", func(t *testing.T) {
+		duration := parseRetryAfter("120")
+		assert.Equal(t, 120*time.Second, duration)
+	})
+
+	t.Run("parses small seconds", func(t *testing.T) {
+		duration := parseRetryAfter("5")
+		assert.Equal(t, 5*time.Second, duration)
+	})
+
+	t.Run("returns zero for empty string", func(t *testing.T) {
+		duration := parseRetryAfter("")
+		assert.Equal(t, time.Duration(0), duration)
+	})
+
+	t.Run("returns zero for zero seconds", func(t *testing.T) {
+		duration := parseRetryAfter("0")
+		assert.Equal(t, time.Duration(0), duration)
+	})
+
+	t.Run("returns zero for negative seconds", func(t *testing.T) {
+		duration := parseRetryAfter("-10")
+		assert.Equal(t, time.Duration(0), duration)
+	})
+
+	t.Run("returns zero for invalid format", func(t *testing.T) {
+		duration := parseRetryAfter("invalid")
+		assert.Equal(t, time.Duration(0), duration)
+	})
+
+	t.Run("parses HTTP-date format", func(t *testing.T) {
+		// Set a future date
+		futureTime := time.Now().Add(30 * time.Second).UTC().Format(time.RFC1123)
+		duration := parseRetryAfter(futureTime)
+		// Allow 2 second tolerance for test execution time
+		assert.True(t, duration >= 28*time.Second && duration <= 32*time.Second,
+			"expected duration around 30s, got %v", duration)
+	})
+
+	t.Run("returns zero for past HTTP-date", func(t *testing.T) {
+		// Set a past date
+		pastTime := time.Now().Add(-30 * time.Second).UTC().Format(time.RFC1123)
+		duration := parseRetryAfter(pastTime)
+		assert.Equal(t, time.Duration(0), duration)
+	})
+}
+
+func TestDoRequest_RateLimiting(t *testing.T) {
+	t.Run("handles 429 with Retry-After header (seconds)", func(t *testing.T) {
+		attempts := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			if attempts < 2 {
+				w.Header().Set("Retry-After", "1")
+				w.WriteHeader(http.StatusTooManyRequests)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"code":    200,
+				"message": "success",
+			})
+		}))
+		defer server.Close()
+
+		c := New(
+			"auth-key",
+			"secret-key",
+			WithBaseURL(server.URL),
+			WithRetries(2),
+			WithRetryWait(10*time.Millisecond, 5*time.Second),
+		)
+
+		start := time.Now()
+		resp, err := c.Post(t.Context(), "/test", nil)
+		elapsed := time.Since(start)
+
+		require.NoError(t, err)
+		assert.Equal(t, 200, resp.Code)
+		assert.Equal(t, 2, attempts)
+		// Should have waited approximately 1 second as per Retry-After header
+		assert.True(t, elapsed >= 900*time.Millisecond, "expected at least 900ms delay, got %v", elapsed)
+	})
+
+	t.Run("handles 429 without Retry-After header (fallback to manual backoff)", func(t *testing.T) {
+		attempts := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			if attempts < 2 {
+				// No Retry-After header
+				w.WriteHeader(http.StatusTooManyRequests)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"code":    200,
+				"message": "success",
+			})
+		}))
+		defer server.Close()
+
+		c := New(
+			"auth-key",
+			"secret-key",
+			WithBaseURL(server.URL),
+			WithRetries(2),
+			WithRetryWait(50*time.Millisecond, 500*time.Millisecond),
+		)
+
+		start := time.Now()
+		resp, err := c.Post(t.Context(), "/test", nil)
+		elapsed := time.Since(start)
+
+		require.NoError(t, err)
+		assert.Equal(t, 200, resp.Code)
+		assert.Equal(t, 2, attempts)
+		// Should have used manual backoff (at least 50ms)
+		assert.True(t, elapsed >= 50*time.Millisecond, "expected at least 50ms delay, got %v", elapsed)
+		// Should not have waited too long (less than what a Retry-After: 1 would cause)
+		assert.True(t, elapsed < 500*time.Millisecond, "expected less than 500ms delay, got %v", elapsed)
+	})
+
+	t.Run("returns ErrRateLimited after retries exhausted", func(t *testing.T) {
+		attempts := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			w.Header().Set("Retry-After", "1")
+			w.WriteHeader(http.StatusTooManyRequests)
+		}))
+		defer server.Close()
+
+		c := New(
+			"auth-key",
+			"secret-key",
+			WithBaseURL(server.URL),
+			WithRetries(1),
+			WithRetryWait(10*time.Millisecond, 100*time.Millisecond),
+		)
+
+		_, err := c.Post(t.Context(), "/test", nil)
+
+		require.Error(t, err)
+		assert.ErrorIs(t, err, errors.ErrRateLimited)
+		assert.Equal(t, 2, attempts) // initial + 1 retry
+	})
+
+	t.Run("caps Retry-After at RetryWaitMax", func(t *testing.T) {
+		attempts := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			attempts++
+			if attempts < 2 {
+				// Request a very long wait time
+				w.Header().Set("Retry-After", "3600") // 1 hour
+				w.WriteHeader(http.StatusTooManyRequests)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"code":    200,
+				"message": "success",
+			})
+		}))
+		defer server.Close()
+
+		c := New(
+			"auth-key",
+			"secret-key",
+			WithBaseURL(server.URL),
+			WithRetries(2),
+			WithRetryWait(10*time.Millisecond, 100*time.Millisecond), // Max 100ms
+		)
+
+		start := time.Now()
+		resp, err := c.Post(t.Context(), "/test", nil)
+		elapsed := time.Since(start)
+
+		require.NoError(t, err)
+		assert.Equal(t, 200, resp.Code)
+		// Should have capped at RetryWaitMax (100ms), not waited 1 hour
+		assert.True(t, elapsed < 500*time.Millisecond, "expected capped delay, got %v", elapsed)
+	})
+}

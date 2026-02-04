@@ -16,7 +16,6 @@ package payout
 
 import (
 	"encoding/json"
-	stderrors "errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -165,7 +164,9 @@ func TestIDRService_Create(t *testing.T) {
 		})
 
 		require.Error(t, err)
-		assert.True(t, stderrors.Is(err, errors.ErrInvalidTransactionID))
+		valErr := errors.GetValidationError(err)
+		require.NotNil(t, valErr)
+		assert.Equal(t, "transaction_id", valErr.Field)
 
 		// Too long (more than 20 characters)
 		_, err = svc.Create(t.Context(), &IDRRequest{
@@ -178,7 +179,9 @@ func TestIDRService_Create(t *testing.T) {
 		})
 
 		require.Error(t, err)
-		assert.True(t, stderrors.Is(err, errors.ErrInvalidTransactionID))
+		valErr = errors.GetValidationError(err)
+		require.NotNil(t, valErr)
+		assert.Equal(t, "transaction_id", valErr.Field)
 
 		// Boundary: exactly 5 characters (minimum valid)
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

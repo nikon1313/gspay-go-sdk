@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/client"
 	"github.com/H0llyW00dzZ/gspay-go-sdk/src/constants"
@@ -136,7 +137,7 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 	// Validate transaction ID length
 	if len(req.TransactionID) < constants.MinTransactionIDLength ||
 		len(req.TransactionID) > constants.MaxTransactionIDLength {
-		return nil, s.client.Error(errors.ErrInvalidTransactionID)
+		return nil, errors.NewValidationError(s.client.Language, "transaction_id", s.client.I18n(errors.MsgInvalidTransactionID))
 	}
 
 	// Validate amount (minimum 10000 IDR)
@@ -162,8 +163,12 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 	}
 
 	// Add channel if specified
-	if req.Channel != "" && constants.IsValidChannelIDR(req.Channel) {
-		apiReq.Channel = string(req.Channel)
+	if req.Channel != "" {
+		// Normalize to uppercase (e.g., "qris" -> "QRIS")
+		upperChannel := constants.ChannelIDR(strings.ToUpper(string(req.Channel)))
+		if constants.IsValidChannelIDR(upperChannel) {
+			apiReq.Channel = string(upperChannel)
+		}
 	}
 
 	endpoint := fmt.Sprintf(constants.GetEndpoint(constants.EndpointIDRCreate), s.client.AuthKey)

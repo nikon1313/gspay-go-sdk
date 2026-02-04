@@ -148,7 +148,7 @@ func (s *IDRService) Create(ctx context.Context, req *IDRRequest) (*IDRResponse,
 	// Validate transaction ID length
 	if len(req.TransactionID) < constants.MinTransactionIDLength ||
 		len(req.TransactionID) > constants.MaxTransactionIDLength {
-		return nil, s.client.Error(errors.ErrInvalidTransactionID)
+		return nil, errors.NewValidationError(s.client.Language, "transaction_id", s.client.I18n(errors.MsgInvalidTransactionID))
 	}
 
 	// Validate bank code

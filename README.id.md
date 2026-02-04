@@ -678,6 +678,7 @@ SDK saat ini mendukung pembayaran **Indonesia (IDR)**. Rilis mendatang akan mena
 - [ ] Tambahkan dukungan untuk refund parsial (jika didukung oleh API)
 - [ ] Query saldo multi-mata uang
 - [ ] Implementasi mekanisme rendering/penyimpanan QR Code (misal: .png)
+- [ ] Implementasi [Go generator code](https://go.dev/blog/generate) untuk i18n yang menghasilkan code untuk terjemahan dengan `go generate ...`
 
 ### **Kontribusi**
 Kontribusi untuk memperluas dukungan metode pembayaran sangat diterima! Silakan lihat [Panduan Kontribusi](CONTRIBUTING.md) untuk detailnya.

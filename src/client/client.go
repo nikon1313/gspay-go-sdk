@@ -102,6 +102,7 @@ func New(authKey, secretKey string, opts ...Option) *Client {
 		RetryWaitMax: time.Duration(constants.DefaultRetryWaitMax) * time.Millisecond,
 		Language:     i18n.English,
 		logger:       logger.Nop{},
+		digest:       nil, // nil by default; explicit assignment for clarity (uses MD5)
 	}
 
 	for _, opt := range opts {

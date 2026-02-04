@@ -16,12 +16,12 @@
 //
 // This internal package handles signature generation and verification as required
 // by the GSPAY2 API specification. By default, it uses MD5 hashing, but supports
-// custom digest algorithms via the [DigestFunc] type.
+// custom digest algorithms via the [Digest] type.
 //
 // # Custom Digest Algorithms
 //
 // While MD5 is the default (as required by the GSPAY2 API), you can use custom
-// hash functions by providing a [DigestFunc] to [GenerateWithDigest]:
+// hash functions by providing a [Digest] to [GenerateWithDigest]:
 //
 //	// Use SHA-256 instead of MD5
 //	sig := signature.GenerateWithDigest(data, sha256.New)
@@ -29,7 +29,7 @@
 //	// Use SHA-512
 //	sig := signature.GenerateWithDigest(data, sha512.New)
 //
-// The [DigestFunc] type accepts any function that returns a [hash.Hash] instance,
+// The [Digest] type accepts any function that returns a [hash.Hash] instance,
 // making it compatible with all standard library hash functions:
 //   - crypto/md5.New (default)
 //   - crypto/sha1.New

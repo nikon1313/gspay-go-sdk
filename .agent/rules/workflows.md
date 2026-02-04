@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # AI Agent Workflows
 
 This document describes common workflows for AI agents working on this project.

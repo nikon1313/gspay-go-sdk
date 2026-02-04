@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # DeepWiki MCP Server Instructions
 
 This project has DeepWiki configured as an MCP server for accessing documentation and knowledge about Go packages and libraries.

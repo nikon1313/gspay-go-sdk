@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # gopls MCP Server Instructions
 
 This project has `gopls` (Go Language Server) configured as an MCP (Model Context Protocol) server for enhanced Go development assistance.

@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # GSPAY Go SDK (Unofficial) Project Instructions
 
 This document provides guidance for AI agents working on the GSPAY Go SDK project.

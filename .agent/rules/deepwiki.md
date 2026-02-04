@@ -8,7 +8,7 @@ This project has DeepWiki configured as an MCP server for accessing documentatio
 
 ## Available Tools
 
-### 1. `mcp__deepwiki__ask_question`
+### 1. `ask_question`
 
 Ask questions about Go packages, libraries, or programming concepts.
 
@@ -31,7 +31,7 @@ Ask questions about Go packages, libraries, or programming concepts.
 }
 ```
 
-### 2. `mcp__deepwiki__read_wiki_structure`
+### 2. `read_wiki_structure`
 
 Get the documentation structure/outline for a repository.
 
@@ -45,7 +45,7 @@ Get the documentation structure/outline for a repository.
 }
 ```
 
-### 3. `mcp__deepwiki__read_wiki_contents`
+### 3. `read_wiki_contents`
 
 Read specific documentation content from a repository's wiki.
 
@@ -148,7 +148,7 @@ DeepWiki complements gopls:
 
 **Workflow Example:**
 ```
-1. Use gopls `hover` to see a function signature
+1. Use gopls `go_file_context` to see dependencies
 2. If it's from a library, use DeepWiki to understand usage
-3. Use gopls `references` to see how it's used in your codebase
+3. Use gopls `go_symbol_references` to see how it's used in your codebase
 ```

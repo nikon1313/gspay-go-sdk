@@ -12,21 +12,18 @@ When investigating a bug or unexpected behavior:
 
 ```
 1. Get diagnostics for the relevant file
-   → Use: mcp__gopls__diagnostics
+   → Use: mcp_gopls_go_diagnostics
    
-2. Find the function definition
-   → Use: mcp__gopls__definition
+2. Get file context to understand dependencies
+   → Use: mcp_gopls_go_file_context
    
-3. Get hover info for context
-   → Use: mcp__gopls__hover
+3. Find all references to understand usage
+   → Use: mcp_gopls_go_symbol_references
    
-4. Find all references to understand usage
-   → Use: mcp__gopls__references
-   
-5. Check test files for expected behavior
+4. Check test files for expected behavior
    → Read: *_test.go files
    
-6. Fix the bug and verify
+5. Fix the bug and verify
    → Run: go test ./...
 ```
 
@@ -36,10 +33,11 @@ When implementing a new feature:
 
 ```
 1. Understand existing patterns
-   → Use: mcp__gopls__documentSymbol on similar files
+   → Use: mcp_gopls_go_package_api on similar packages
    
 2. Check for similar implementations
-   → Use: mcp__gopls__references to find usage patterns
+   → Use: mcp_gopls_go_search to find related symbols
+   → Use: mcp_gopls_go_symbol_references to find usage patterns
    
 3. Create the implementation following project conventions
    → Follow patterns in project.md
@@ -58,14 +56,14 @@ When implementing a new feature:
 When reviewing code changes:
 
 ```
-1. Get file overview
-   → Use: mcp__gopls__documentSymbol
+1. Get package API overview
+   → Use: mcp_gopls_go_package_api
    
 2. Check for diagnostics (errors/warnings)
-   → Use: mcp__gopls__diagnostics
+   → Use: mcp_gopls_go_diagnostics
    
-3. Verify function signatures
-   → Use: mcp__gopls__hover
+3. Understand file dependencies
+   → Use: mcp_gopls_go_file_context
    
 4. Check test coverage
    → Run: go test ./... -cover
@@ -81,21 +79,20 @@ When reviewing code changes:
 When exploring code you don't understand:
 
 ```
-1. Get file structure
-   → Use: mcp__gopls__documentSymbol
+1. Get package API summary
+   → Use: mcp_gopls_go_package_api
    
-2. For each symbol of interest:
-   → Use: mcp__gopls__hover for quick info
-   → Use: mcp__gopls__definition to see implementation
-   
-3. For interfaces:
-   → Use: mcp__gopls__implementation to find implementors
+2. Understand file dependencies
+   → Use: mcp_gopls_go_file_context
+
+3. Search for specific symbols
+   → Use: mcp_gopls_go_search
    
 4. For library functions:
-   → Use: mcp__deepwiki__ask_question for documentation
+   → Use: DeepWiki MCP for documentation
    
-5. See how it's used
-   → Use: mcp__gopls__references
+5. See how symbols are used
+   → Use: mcp_gopls_go_symbol_references
 ```
 
 ## Workflow 5: Refactoring
@@ -104,21 +101,18 @@ When refactoring code:
 
 ```
 1. Find all references to the target
-   → Use: mcp__gopls__references
+   → Use: mcp_gopls_go_symbol_references
    
 2. Understand the current implementation
-   → Use: mcp__gopls__definition
-   → Use: mcp__gopls__hover
+   → Use: mcp_gopls_go_file_context
+   → Use: mcp_gopls_go_package_api
    
-3. Check for interface implementations
-   → Use: mcp__gopls__implementation
-   
-4. Make changes carefully
+3. Make changes carefully
    → Update all reference sites
    → Maintain backward compatibility if public API
    
-5. Verify refactoring
-   → Use: mcp__gopls__diagnostics
+4. Verify refactoring
+   → Use: mcp_gopls_go_diagnostics
    → Run: go build ./...
    → Run: go test ./...
 ```
@@ -129,13 +123,13 @@ When writing or improving tests:
 
 ```
 1. Understand what needs testing
-   → Use: mcp__gopls__documentSymbol to list functions
+   → Use: mcp_gopls_go_package_api to list exported functions
    
 2. Check existing test patterns
    → Read: existing *_test.go files
    
 3. For testify usage questions
-   → Use: mcp__deepwiki__ask_question with repo_name: "stretchr/testify"
+   → Use: DeepWiki MCP with repo_name: "stretchr/testify"
    
 4. Write tests following table-driven pattern
    → Use mock HTTP servers for API tests
@@ -155,11 +149,11 @@ When debugging API-related issues:
    → Verify signature generation
    
 2. Check the response parsing
-   → Use: mcp__gopls__definition on ParseData
+   → Use: mcp_gopls_go_file_context on request.go
    → Verify JSON field tags
    
 3. Check error handling
-   → Use: mcp__gopls__references on error types
+   → Use: mcp_gopls_go_symbol_references on error types
    
 4. Add test case reproducing the issue
    → Use httptest.NewServer for mocking
@@ -172,22 +166,20 @@ When debugging API-related issues:
 
 | Task | Primary Tool | Secondary Tool |
 |------|--------------|----------------|
-| Find where something is defined | `mcp__gopls__definition` | - |
-| Find all usages | `mcp__gopls__references` | - |
-| Get quick documentation | `mcp__gopls__hover` | `mcp__deepwiki__ask_question` |
-| Check for errors | `mcp__gopls__diagnostics` | `go vet` |
-| List file contents | `mcp__gopls__documentSymbol` | - |
-| Find interface implementations | `mcp__gopls__implementation` | - |
-| Learn about libraries | `mcp__deepwiki__ask_question` | - |
+| Find symbol usages | `mcp_gopls_go_symbol_references` | - |
+| Search for symbols | `mcp_gopls_go_search` | - |
+| Get package API | `mcp_gopls_go_package_api` | - |
+| Check for errors | `mcp_gopls_go_diagnostics` | `go vet` |
+| Understand file deps | `mcp_gopls_go_file_context` | - |
+| Learn about libraries | DeepWiki MCP | - |
 | Run tests | `go test` (bash) | - |
 | Build verification | `go build` (bash) | `go vet` |
 
 ## Tips
 
 1. **Always use absolute paths** when calling gopls tools
-2. **Line numbers are 1-based** (first line is 1)
-3. **Column numbers are byte-based** (important for UTF-8)
+2. **Symbol names are case-insensitive** for fuzzy search
+3. **Qualify symbols with package name** when using go_symbol_references if needed
 4. **Run tests frequently** to catch issues early
 5. **Check diagnostics** before committing changes
-6. **Use hover** before definition for quick checks
-7. **Combine tools** for comprehensive understanding
+6. **Combine tools** for comprehensive understanding
